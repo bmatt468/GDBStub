@@ -10,6 +10,8 @@ namespace GDBStub
     {
         static void Main(string[] args)
         {
+            Handler handle = new Handler();
+            handle.Listen();
         }
     }
 }

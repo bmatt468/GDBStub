@@ -8,5 +8,9 @@ namespace GDBStub
 {
     class Handler
     {
+        public void Listen()
+        {
+
+        }
     }
 }
