@@ -2,6 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
+using System.Diagnostics;
+using System.Security.Cryptography;
+using System.IO;
+using System.Runtime.InteropServices;
 
 namespace GDBStub
 {
@@ -14,20 +19,20 @@ namespace GDBStub
 
         public Memory()
         {
-
+            //Memory Constructor that takes no arguments
         }
         public Memory(int memSize)
         {
             theArray = new byte[memSize];
         }
-        /*
+        
         public string getHash()
         {
             MD5 hasher = new MD5();
 
             return hasher.Hash(theArray);
         }
-        */
+        
 
 
         public byte[] getArray()
