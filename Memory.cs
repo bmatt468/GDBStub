@@ -7,11 +7,15 @@ namespace GDBStub
 {
     class Memory
     {
-        private byte[] theArray;
+        protected byte[] theArray;
 
         //program counter
         //Int32 pc;
 
+        public Memory()
+        {
+
+        }
         public Memory(int memSize)
         {
             theArray = new byte[memSize];
