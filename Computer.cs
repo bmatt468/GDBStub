@@ -26,7 +26,7 @@ namespace GDBStub
         bool is_running = false;
         Register r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14 = new Register();
         int pc = 0;
-        Memory RAM;
+        Memory RAM = new Memory();
         CPU cpu;
         Thread programThread;
 
@@ -61,9 +61,30 @@ namespace GDBStub
             return bA;
         }
         */
+        private void clearRegisters()
+        {
+            r0.CLEAR();
+            r1.CLEAR();
+            r2.CLEAR();
+            r3.CLEAR();
+            r4.CLEAR();
+            r5.CLEAR();
+            r6.CLEAR();
+            r7.CLEAR();
+            r8.CLEAR();
+            r9.CLEAR();
+            r10.CLEAR();
+            r11.CLEAR();
+            r12.CLEAR();
+            r13.CLEAR();
+            r14.CLEAR();
+        }
 
         public int readELF(string file, int memSize)
         {
+           /* RAM.CLEAR();
+            clearRegisters();
+            *///opens the log file to append
             StreamWriter log = new StreamWriter("log.txt", true);
             log.WriteLine("ELF: Reading ELF file");
             int output = -1;
@@ -86,8 +107,9 @@ namespace GDBStub
                 writeElfToRam(e, elfArray, ref ram);
 
                 output = 1;
-                log.WriteLine(printArray(ram.getArray()));
 
+                string ramOutput = ram.displayAtAddress(e.elfphs[0].p_vaddr - 4, 32);
+                log.WriteLine(ramOutput);
             }
             catch
             {
@@ -154,11 +176,44 @@ namespace GDBStub
                     Option.Instance.setFile(command[1]);
                     readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
                     break;
+                case "display":
+                    //display the ram at an address
+                    int addr = 0;
+                    int length = 10;
+                    try
+                    {
+                        addr = Convert.ToInt32(command[1]);
+                        length = Convert.ToInt32(command[2]);
+                    }
+                    catch
+                    {
+                        
+                    }
+                    displayRam(addr, length);
+
+                    break;
                 default:
-                    output = "Invalid Command: valid commands are run, step, stop/break, or reset";
+                    output += "Invalid Command: valid commands are:\nrun \nstep \nstop/break \nreset \ndisplay [addr] [lines]";
                     break;
             }
             return output;
+        }
+
+        //Displays the RAM
+        private void displayRam(int addr, int length)
+        {
+            StreamWriter log = new StreamWriter("log.txt", true);
+            if (RAM.getArray() != null)
+            {
+                string ramPrintOut = RAM.displayAtAddress(addr, length);
+                log.WriteLine(ramPrintOut);
+                Console.WriteLine(ramPrintOut);
+            }
+            else
+            {
+                log.WriteLine("Could not display ram, it is NULL");
+            }
+            log.Close();
         }
 
 

@@ -20,7 +20,9 @@ namespace GDBStub
         public Memory()
         {
             //Memory Constructor that takes no arguments
+            theArray = new byte[32768];
         }
+
         public Memory(int memSize)
         {
             theArray = new byte[memSize];
@@ -32,7 +34,31 @@ namespace GDBStub
 
             return hasher.Hash(theArray);
         }
-        
+
+
+        public string displayAtAddress(int addr, int desiredLines = 8)
+        {
+            int numOfLines = 0;
+            int numOfBytes = 0;
+            string output = "";
+            output = "RAM: starting at: " + addr.ToString() + "\n";
+            for (; numOfLines < desiredLines && addr < theArray.Length; addr++)
+            { 
+                output += theArray[addr].ToString("X2");
+                if ((numOfBytes + 1) % 2 == 0 && numOfBytes != 0)
+                {
+                    output += " ";
+                }
+                if ((numOfBytes + 1) % 16 == 0 && numOfBytes != 0)
+                {
+                    output += "\n";
+                    numOfLines += 1;
+                }
+                numOfBytes++;
+            }
+            return output;
+        }
+
 
 
         public byte[] getArray()
@@ -143,5 +169,6 @@ namespace GDBStub
         {
             Array.Clear(theArray, 0, theArray.Length);
         }
+
     }
 }

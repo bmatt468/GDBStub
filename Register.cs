@@ -14,7 +14,11 @@ namespace GDBStub
             theArray = new byte[4];
         }
 
+        //displays the register
+        public void display()
+        {
 
+        }
 
     }
 }
