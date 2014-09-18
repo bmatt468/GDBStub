@@ -18,13 +18,21 @@ namespace GDBStub
         static void Main(string[] args)
         {
             
-            StreamWriter log = new StreamWriter("log.text");
+            StreamWriter log = new StreamWriter("log.txt");
             log.WriteLine("Test");
-
+            log.Close();
             if (Option.Instance.parseArgs(args))
             {
+                if (Option.Instance.getTest())
+                {
+                    //run tests
+                }
                 Handler handle = new Handler();
                 handle.Listen();
+            }
+            else
+            {
+                //invalid command line arguments
             }
         }
     }

@@ -14,19 +14,21 @@ namespace GDBStub
     public class TestSimulator
     {
 
-        public static void RunTests(StreamWriter log)
+        public static void RunTests()
         {
+            //append
+            StreamWriter log = new StreamWriter("log.txt");
             log.WriteLine("Test: Starting Simulator unit tests");
 
             ELFReader e = new ELFReader();
-
+            Memory ram = new Memory(32768);
+            Computer comp = new Computer();
 
             log.WriteLine("Test: Testing Hash of test1.exe");
             byte[] elfArray = File.ReadAllBytes("test1.exe");
             e.ReadHeader(elfArray);
 
-            Memory ram = new Memory(32768);
-            Simulator.writeElfToRam(e, elfArray, ref ram);
+            comp.writeElfToRam(e, elfArray, ref ram);
 
             string resultHash = ram.getHash();
             string hash = "3500a8bef72dfed358b25b61b7602cf1";
@@ -37,7 +39,7 @@ namespace GDBStub
             log.WriteLine("Test: Testing Hash of test2.exe");
             elfArray = File.ReadAllBytes("test2.exe");
             e.ReadHeader(elfArray);
-            Simulator.writeElfToRam(e, elfArray, ref ram);
+            comp.writeElfToRam(e, elfArray, ref ram);
             resultHash = ram.getHash();
             hash = "0a81d8b63d44a192e5f9f52980f2792e";
             Debug.Assert(hash.ToUpper() == resultHash);
@@ -47,7 +49,7 @@ namespace GDBStub
             log.WriteLine("Test: Testing Hash of test3.exe");
             elfArray = File.ReadAllBytes("test3.exe");
             e.ReadHeader(elfArray);
-            Simulator.writeElfToRam(e, elfArray, ref ram);
+            comp.writeElfToRam(e, elfArray, ref ram);
             resultHash = ram.getHash();
             hash = "977159b662ac4e450ed62063fba27029";
             Debug.Assert(hash.ToUpper() == resultHash);
@@ -61,8 +63,11 @@ namespace GDBStub
     public class TestRam
     {
 
-        public static void RunTests(StreamWriter log)
+        public static void RunTests()
         {
+
+            //append
+            StreamWriter log = new StreamWriter("log.txt");
             log.WriteLine("Test: Starting RAM unit tests");
             Memory tram = new Memory(32768);
 
