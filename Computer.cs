@@ -24,10 +24,9 @@ namespace GDBStub
     {
         //is running flag
         bool is_running = false;
-        Register r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14 = new Register();
-        Register[] reg;
+        Register[] reg = new Register[15];
         
-        int pc = 0;
+        uint pc = 0;
         Memory RAM;
         CPU cpu;
         Thread programThread;
@@ -35,10 +34,16 @@ namespace GDBStub
 
         //instantiate the Computer!!! 
         //I don't have a computer yet?  woah!
+        //r14 is the program counter
+
         public Computer()
         {
             RAM = new Memory(Option.Instance.getMemSize());
-            Register[] reg = { r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14 };
+
+//defines 15 registers, 0 - 14
+            for (int i = 0; i < 15; i++){
+                reg[i] = new Register();
+            }
         
 
 
@@ -47,25 +52,22 @@ namespace GDBStub
 
         private void clearRegisters()
         {
-            r0.CLEAR();
-            r1.CLEAR();
-            r2.CLEAR();
-            r3.CLEAR();
-            r4.CLEAR();
-            r5.CLEAR();
-            r6.CLEAR();
-            r7.CLEAR();
-            r8.CLEAR();
-            r9.CLEAR();
-            r10.CLEAR();
-            r11.CLEAR();
-            r12.CLEAR();
-            r13.CLEAR();
-            r14.CLEAR();
+
+            for (int i = 0; i < 15; i++)
+            {
+                reg[i].CLEAR();
+            }
+               
         }
 
 
         //reads the ELF
+        /* Error codes:
+         *  0 = OK
+         * -1 = General
+         * -2 = File not found
+         * -3 = file to large
+         */
         public int readELF(string file, int memSize)
         {
            /* RAM.CLEAR();
@@ -73,6 +75,7 @@ namespace GDBStub
             *///opens the log file to append
             StreamWriter log = new StreamWriter("log.txt", true);
             log.WriteLine("ELF: Reading ELF file");
+            log.Close();
             int output = -1;
             try
             {
@@ -85,24 +88,46 @@ namespace GDBStub
                 */
                 ELFReader e = new ELFReader();
                 byte[] elfArray = File.ReadAllBytes(file);
-                //introspection!!!Woah!!!
-                e.ReadHeader(elfArray);
+                if (elfArray.Length <= Option.Instance.getMemSize())
+                {
+                    //introspection!!!Woah!!!
+                    e.ReadHeader(elfArray);
+
+                    reg[14].WriteWord(0,e.elfHeader.e_entry);
+                    //RAM = new Memory(memSize);
+                    writeElfToRam(e, elfArray, ref RAM);
 
 
-                //RAM = new Memory(memSize);
-                writeElfToRam(e, elfArray, ref RAM);
-
-                output = 1;
-
-                string ramOutput = RAM.displayAtAddress(e.elfphs[0].p_vaddr, 8);
-                log.WriteLine(ramOutput);
-                Console.WriteLine(ramOutput);
+                    string ramOutput = RAM.displayAtAddress(e.elfphs[0].p_vaddr, 8);
+                    log = new StreamWriter("log.txt", true);
+                    log.WriteLine(ramOutput);
+                    log.Close();
+                    Console.WriteLine(ramOutput);
+                    output = 0;
+                }
+                else //file to large
+                {
+                    output = -3;
+                    log = new StreamWriter("log.txt", true);
+                    log.WriteLine("Err: File to Large");
+                    log.Close();
+                }
+               
             }
-            catch
+            catch (System.IO.FileNotFoundException) 
+            {
+                output = -2;
+                log = new StreamWriter("log.txt", true);
+                log.WriteLine("Err: File not found");
+                log.Close();
+            }
+            catch //general exception
             {
                 output = -1;
+                log = new StreamWriter("log.txt", true);
+                log.WriteLine("Err: Something went wrong");
+                log.Close();
             }
-            log.Close();
             return output;
 
         }
@@ -117,15 +142,15 @@ namespace GDBStub
 
             for (int prog = 0; prog < e.elfHeader.e_phnum; prog++)
             {
-                int ramAddress = e.elfphs[prog].p_vaddr;
+                uint ramAddress = (uint)e.elfphs[prog].p_vaddr;
                 //log.WriteLine("RAM: Writing to {0} ", ramAddress);
 
-                int elfOffSet = (int)e.elfphs[prog].p_offset;
+                uint elfOffSet = (uint)e.elfphs[prog].p_offset;
                 //log.WriteLine("ELF: Reading from {0}", e.elfphs[prog].p_offset);
 
                 //log.WriteLine("ELF: Size of Segment {0}", e.elfphs[prog].p_filesz);
-                int RamAddressCounter = ramAddress;
-                int elfOffSetCounter = elfOffSet;
+                uint RamAddressCounter = ramAddress;
+                uint elfOffSetCounter = elfOffSet;
 
                 for (; elfOffSetCounter < elfArray.Length &&
                         RamAddressCounter < e.elfphs[prog].p_filesz + ramAddress;
@@ -145,6 +170,7 @@ namespace GDBStub
         {
             StreamWriter log = new StreamWriter("log.txt", true);
             log.WriteLine("Comp: Command = " + input);
+            log.Close();
             string output = "";
             string[] command = input.Split(' ');
             switch (command[0].ToLower())
@@ -166,6 +192,7 @@ namespace GDBStub
                 case "load":
                     Option.Instance.setFile(command[1]);
                     readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
+                    output = "RAM: Hash is " + RAM.getHash();
                     break;
                 case "display":
                     //display the ram at an address
@@ -177,14 +204,18 @@ namespace GDBStub
                         length = Convert.ToInt32(command[2]);
                     }
                     catch { }
-                    log.WriteLine(RAM.displayAtAddress(addr, length));
+                    string ramInfo = "RAM:\n" + RAM.displayAtAddress(addr, length);
+                    log = new StreamWriter("log.txt", true);
+                    log.WriteLine(ramInfo);
+                    log.Close();
+                    output = ramInfo;
                     
                     break;
                 default:
                     output += "Invalid Command: valid commands are:\nrun \nstep \nstop/break \nreset \ndisplay [addr] [lines]";
                     break;
             }
-            log.Close();
+            
             return output;
         }
 
@@ -192,7 +223,11 @@ namespace GDBStub
         public string reset()
         {
             //reset logic
-            pc = 0;
+            RAM.CLEAR();
+            clearRegisters();
+            readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
+
+
             return "Reset";
         }
 
@@ -201,7 +236,7 @@ namespace GDBStub
             if (is_running)
             {
                 //stop logic
-                programThread.Abort();
+                //programThread.Abort();
                 is_running = false;
                 return "Stopped";
             }
@@ -254,18 +289,33 @@ namespace GDBStub
 
         private void go()
         {
+         
             do
             {
                 //fetch, decode, execute commands here
-                uint word = cpu.fetch();
-
+                uint word = cpu.fetch(reg[14].ReadWord(0));
+                //break if we fetched a zero!
+                if (word == 0) {
+                    is_running = false;
+                    break;
+                }
+                //decode the uint!
                 string command = cpu.decode(word);
 
+                //exeucte the decoded Command!!
                 cpu.execute(command);
-
-                pc++;
-                //Console.WriteLine(pc);
+                incrementPC();
             } while (is_running);
+            //finished running, now display!!
+            //show the updated registers and disassembly panel to reflect the state of the simulation.\
+
+        }
+
+        private void incrementPC(uint iter = 4)
+        {
+            pc = reg[14].ReadWord(0);
+            pc += iter;
+            reg[14].WriteWord(0, pc);
         }
 
     }

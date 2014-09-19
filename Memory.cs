@@ -74,11 +74,11 @@ namespace GDBStub
         }
 
 
-        public bool TestFlag(Int32 addr, byte bit)
+        public bool TestFlag(UInt32 addr, byte bit)
         {
             if (bit >= 0 && bit < 32)
             {
-                int word = ReadWord(addr);
+                uint word = ReadWord(addr);
                 string binary = Convert.ToString(word, 2);
                 binary = binary.PadLeft(32, '0');
                 if (binary[bit] == '1')
@@ -94,11 +94,11 @@ namespace GDBStub
 
         }
 
-        public void SetFlag(Int32 addr, byte bit, bool flag)
+        public void SetFlag(UInt32 addr, byte bit, bool flag)
         {
             if (bit >= 0 && bit < 32)
             {
-                int word = ReadWord(addr);
+                uint word = ReadWord(addr);
                 string binary = Convert.ToString(word, 2);
                 binary = binary.PadLeft(32, '0');
                 char[] binA = binary.ToCharArray();
@@ -111,41 +111,41 @@ namespace GDBStub
                     binA[bit] = '0';
                 }
                 binary = new string(binA);
-                word = Convert.ToInt32(binary, 2);
+                word = Convert.ToUInt32(binary, 2);
                 WriteWord(addr, word);
             }
         }
 
-        public int ReadWord(Int32 addr)
+        public uint ReadWord(UInt32 addr)
         {
+            uint output = 0;
             //if address is not divisible by 4 escape
             if (addr % 4 == 0)
             {
-                int output = BitConverter.ToInt32(theArray, addr);
-                return output;
+                output = BitConverter.ToUInt32(theArray, (int)addr);
             }
-            return -1;
+            return output;
         }//ReadWord
 
-        public short ReadHalfWord(Int32 addr)
+        public ushort ReadHalfWord(UInt32 addr)
         {
+            ushort output = 0;
             //if address is not divisible by 4 escape
             if (addr % 2 == 0)
             {
-                short output = BitConverter.ToInt16(theArray, addr);
-                return output;
+                output = BitConverter.ToUInt16(theArray, (int)addr);
             }
-            return -1;
+            return output;
         }//ReadHalfWord
 
-        public byte ReadByte(Int32 addr)
+        public byte ReadByte(UInt32 addr)
         {
             byte output = theArray[addr];
             return output;
         }//ReadByte
 
 
-        public void WriteWord(Int32 addr, int inpu)
+        public void WriteWord(UInt32 addr, uint inpu)
         {
             if (addr % 4 == 0)
             {
@@ -154,7 +154,7 @@ namespace GDBStub
             }
         }//WriteWord
 
-        public void WriteHalfWord(Int32 addr, short inpu)
+        public void WriteHalfWord(UInt32 addr, ushort inpu)
         {
             if (addr % 2 == 0)
             {
@@ -163,7 +163,7 @@ namespace GDBStub
             }
         }//WriteHalfWord
 
-        public void WriteByte(Int32 addr, byte inpu)
+        public void WriteByte(UInt32 addr, byte inpu)
         {
             theArray[addr] = inpu;
         }//WriteByte

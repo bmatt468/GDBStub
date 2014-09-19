@@ -29,29 +29,32 @@ namespace GDBStub
 
         public CPU(ref Memory RAM, ref Register[] reg)
             {
-                // TODO: Complete member initialization
                 this.RAM = RAM;
                 this.reg = reg;
             }
 
-        public uint fetch()
+
+        //fetches data from RAM 
+        public uint fetch(uint pc)
         {
-            uint output = 0;
+            
+            return RAM.ReadWord(pc); 
+           
 
-
-   
-            return output;
         }
 
-        public string decode(UInt32 data)
+        //decodes the int into a command.  like mov r0, r1
+        public string decode(uint data)
         {
             string output = "";
             //decode data
-           
 
+
+            output += data.ToString("X2");
             return output;
         }
 
+        //executes the actual data by movine registers and stuff
         public void execute(string command)
         {
 

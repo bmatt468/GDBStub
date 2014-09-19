@@ -21,10 +21,9 @@ namespace GDBStub
            
             Handler h = new Handler();
             h.Listen(8080);
-
             /*
             danielTesting(args);
-            */
+           */
         }
 
 
@@ -38,6 +37,10 @@ namespace GDBStub
                 if (Option.Instance.getTest())
                 {
                     //run tests
+                    TestRam.RunTests();
+                    TestSimulator.RunTests();
+                    Console.WriteLine("All tests passed see log.txt for details");
+
                 }
                     Computer comp = new Computer();
                     if (Option.Instance.getFile() != "")

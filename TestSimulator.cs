@@ -17,7 +17,7 @@ namespace GDBStub
         public static void RunTests()
         {
             //append
-            StreamWriter log = new StreamWriter("log.txt");
+            StreamWriter log = new StreamWriter("log.txt", true);
             log.WriteLine("Test: Starting Simulator unit tests");
 
             ELFReader e = new ELFReader();
@@ -53,8 +53,8 @@ namespace GDBStub
             resultHash = ram.getHash();
             hash = "977159b662ac4e450ed62063fba27029";
             Debug.Assert(hash.ToUpper() == resultHash);
-
             log.WriteLine("Test: All Hashes correct\n");
+            log.Close();
 
         }
 
@@ -67,7 +67,7 @@ namespace GDBStub
         {
 
             //append
-            StreamWriter log = new StreamWriter("log.txt");
+            StreamWriter log = new StreamWriter("log.txt", true);
             log.WriteLine("Test: Starting RAM unit tests");
             Memory tram = new Memory(32768);
 
@@ -81,7 +81,7 @@ namespace GDBStub
             tram.CLEAR();
 
             log.WriteLine("Test: Read/Write HalfWord");
-            short shortRes = tram.ReadHalfWord(0);
+            ushort shortRes = tram.ReadHalfWord(0);
             Debug.Assert(shortRes == 0);
             tram.WriteHalfWord(0, 0xeef);
             shortRes = tram.ReadHalfWord(0);
@@ -90,7 +90,7 @@ namespace GDBStub
             tram.CLEAR();
 
             log.WriteLine("Test: Read/Write Word");
-            int intRes = tram.ReadWord(0);
+            uint intRes = tram.ReadWord(0);
             Debug.Assert(intRes == 0);
             tram.WriteWord(0, 0xabcdef);
             intRes = tram.ReadWord(0);
@@ -107,9 +107,9 @@ namespace GDBStub
             flagRes = tram.TestFlag(0, 3);
             Debug.Assert(flagRes == false);
 
-
             log.WriteLine("Test: All Ram Tests passed\n");
             tram.CLEAR();
+            log.Close();
 
         }
 
