@@ -17,8 +17,11 @@ namespace GDBStub
     
         static void Main(string[] args)
         {
+
+            Handler h = new Handler();
+            h.Listen2(8080);
             
-            StreamWriter log = new StreamWriter("log.txt");
+            /*StreamWriter log = new StreamWriter("log.txt");
             log.WriteLine("Test");
             log.Close();
             if (Option.Instance.parseArgs(args))
@@ -33,7 +36,7 @@ namespace GDBStub
             else
             {
                 //invalid command line arguments
-            }
+            }*/
         }
     }
 }
