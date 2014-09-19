@@ -25,42 +25,26 @@ namespace GDBStub
         //is running flag
         bool is_running = false;
         Register r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14 = new Register();
+        Register[] reg;
+        
         int pc = 0;
-        Memory RAM = new Memory();
+        Memory RAM;
         CPU cpu;
         Thread programThread;
 
-        public string printArray(byte[] array)
+
+        //instantiate the Computer!!! 
+        //I don't have a computer yet?  woah!
+        public Computer()
         {
-            string output = "";
+            RAM = new Memory(Option.Instance.getMemSize());
+            Register[] reg = { r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14 };
+        
 
-            output = "The Array\n";
-            for (int i = 0; i < array.Length; i++)
-            {
-                output += array[i].ToString("X2");
-                i++;
-                output += array[i].ToString("X2") + " ";
-                if ((i + 1) % 16 == 0)
-                {
-                    output += "\n";
-                }
-            }
-            return output;
 
+            cpu = new CPU(ref RAM,ref reg);
         }
 
-        /*
-         * 
-         * Unused might be good in the future
-        public static byte[] stringToByteArray(string input){
-
-            byte[] bA = new byte[input.Length * sizeof(char)];
-
-            char[] inputArray = input.ToCharArray ();
-            System.Buffer.BlockCopy(inputArray, 0, bA, 0, bA.Length);
-            return bA;
-        }
-        */
         private void clearRegisters()
         {
             r0.CLEAR();
@@ -80,6 +64,8 @@ namespace GDBStub
             r14.CLEAR();
         }
 
+
+        //reads the ELF
         public int readELF(string file, int memSize)
         {
            /* RAM.CLEAR();
@@ -103,13 +89,14 @@ namespace GDBStub
                 e.ReadHeader(elfArray);
 
 
-                Memory ram = new Memory(memSize);
-                writeElfToRam(e, elfArray, ref ram);
+                //RAM = new Memory(memSize);
+                writeElfToRam(e, elfArray, ref RAM);
 
                 output = 1;
 
-                string ramOutput = ram.displayAtAddress(e.elfphs[0].p_vaddr - 4, 32);
+                string ramOutput = RAM.displayAtAddress(e.elfphs[0].p_vaddr, 8);
                 log.WriteLine(ramOutput);
+                Console.WriteLine(ramOutput);
             }
             catch
             {
@@ -120,6 +107,8 @@ namespace GDBStub
 
         }
 
+
+        //writes the ELF file to the RAM array
         public void writeElfToRam(ELFReader e, byte[] elfArray, ref Memory ram)
         {
 
@@ -154,6 +143,8 @@ namespace GDBStub
         //Run, Step, Stop/Break, and Reset
         internal string command(string input)
         {
+            StreamWriter log = new StreamWriter("log.txt", true);
+            log.WriteLine("Comp: Command = " + input);
             string output = "";
             string[] command = input.Split(' ');
             switch (command[0].ToLower())
@@ -185,40 +176,19 @@ namespace GDBStub
                         addr = Convert.ToInt32(command[1]);
                         length = Convert.ToInt32(command[2]);
                     }
-                    catch
-                    {
-                        
-                    }
-                    displayRam(addr, length);
-
+                    catch { }
+                    log.WriteLine(RAM.displayAtAddress(addr, length));
+                    
                     break;
                 default:
                     output += "Invalid Command: valid commands are:\nrun \nstep \nstop/break \nreset \ndisplay [addr] [lines]";
                     break;
             }
+            log.Close();
             return output;
         }
 
-        //Displays the RAM
-        private void displayRam(int addr, int length)
-        {
-            StreamWriter log = new StreamWriter("log.txt", true);
-            if (RAM.getArray() != null)
-            {
-                string ramPrintOut = RAM.displayAtAddress(addr, length);
-                log.WriteLine(ramPrintOut);
-                Console.WriteLine(ramPrintOut);
-            }
-            else
-            {
-                log.WriteLine("Could not display ram, it is NULL");
-            }
-            log.Close();
-        }
-
-
-
-
+    
         public string reset()
         {
             //reset logic
@@ -288,6 +258,7 @@ namespace GDBStub
             {
                 //fetch, decode, execute commands here
                 uint word = cpu.fetch();
+
                 string command = cpu.decode(word);
 
                 cpu.execute(command);

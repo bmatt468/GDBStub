@@ -17,15 +17,22 @@ namespace GDBStub
         //program counter
         //Int32 pc;
 
+        //Memory Constructor that takes no arguments
+        //auto designates ram size to 32768
         public Memory()
         {
-            //Memory Constructor that takes no arguments
-            theArray = new byte[32768];
+            if (theArray == null)
+            {
+                theArray = new byte[32768];
+            }
         }
 
         public Memory(int memSize)
         {
-            theArray = new byte[memSize];
+            if (theArray == null)
+            {
+                theArray = new byte[memSize];
+            }
         }
         
         public string getHash()
@@ -66,10 +73,6 @@ namespace GDBStub
             return theArray;
         }
 
-        public int getSize()
-        {
-            return theArray.Length;
-        }
 
         public bool TestFlag(Int32 addr, byte bit)
         {
@@ -169,6 +172,7 @@ namespace GDBStub
         {
             Array.Clear(theArray, 0, theArray.Length);
         }
+
 
     }
 }
