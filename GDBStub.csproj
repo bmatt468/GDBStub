@@ -3,10 +3,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProjectGuid>{CA42C38B-8B70-4138-B8CD-DD8DB26B4729}</ProjectGuid>
+    <ProjectGuid>{5EE23E2F-D129-4E00-99F2-1600B1FE8A5C}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <NoStandardLibraries>false</NoStandardLibraries>
-    <AssemblyName>ConsoleApplication</AssemblyName>
+    <AssemblyName>GDBStub</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
