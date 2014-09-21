@@ -83,7 +83,7 @@ namespace GDBStub
                                 obtainedChecksum %= 256;
                                 
                                 // send success packet if checksum matches
-                                if (checksum == obtainedChecksum.ToString("x"))
+                                if (checksum == obtainedChecksum.ToString("x2"))
                                 {
                                     byte[] msg3 = System.Text.Encoding.UTF8.GetBytes("+");
                                     ns.Write(msg3, 0, msg3.Length);
@@ -119,45 +119,90 @@ namespace GDBStub
         }
 
         public void ParseCommand(string cmd, NetworkStream ns)
-        {
-            ushort chk = 0;
+        {            
             switch (cmd)
             {
                 // initial phase of handshake
                 // server responds with packetsize (in hex)
-                // for testing purposes the respone is 119 (35 32-bit registers)
+                // for testing purposes the respone is 0x21 (4 32-bit registers 
+                // [requiring 8 bits ea.] + 1 extra bit)
                 case "qSupported:qRelocInsn+":
-                    foreach (char c in "PacketSize=119")
-                    {
-                        chk += (ushort)Convert.ToInt16(c);
-                    }
-                    chk %= 256;
-                    byte[] msg = System.Text.Encoding.UTF8.GetBytes("$PacketSize=119#" + chk.ToString("x"));
-                    ns.Write(msg, 0, msg.Length);
-                    Console.WriteLine(String.Format("Sent: {0}", System.Text.Encoding.UTF8.GetString(msg)));
+                    this.Respond("PacketSize=21", ns);
                     break;
 
                 // phase of handshake
-                // server responds with packetsize (in hex)
-                // for testing purposes the respone is 119 (35 32-bit registers)
+                // client informs server about threads
+                // server responds with acknowledgement (OK)
                 case "Hg0":
-                    string response = "OK";
-                    foreach (char c in response)
-                    {
-                        chk += (ushort)Convert.ToInt16(c);
-                    }
-                    chk %= 256;
-                    byte[] msg2 = System.Text.Encoding.UTF8.GetBytes("$" + response + "#" + chk.ToString("x"));
-                    ns.Write(msg2, 0, msg2.Length);
-                    Console.WriteLine(String.Format("Sent: {0}", System.Text.Encoding.UTF8.GetString(msg2)));
+                    this.Respond("OK", ns);
                     break;
-                
+
+                // phase of handshake
+                // client asks why thread halted
+                // server responds with reason
+                // for testing purposes the respone S05 (TRAP Exception)
+                case "?":
+                    this.Respond("S05", ns);
+                    break;
+
+                // phase of handshake
+                // client sets thread
+                // server responds with OK
+                case "Hc-1":
+                    this.Respond("OK", ns);
+                    break;
+
+                // phase of handshake
+                // client asks for thread ID
+                // server responds with thread ID
+                // for testing purposes the response is QC0 
+                case "qC":
+                    this.Respond("QC0", ns);
+                    break;
+
+                // phase of handshake
+                // client asks if new thread was created
+                // server responds with whether process is new or existing
+                // for testing purposes the response is 0 (new process) 
+                case "qAttached":
+                    this.Respond("0", ns);
+                    break;
+
+                // phase of handshake
+                // client asks for state of registers
+                // server responds with register state
+                // format for response is XX, where XX is the 2 byte representation of the register
+                // for testing purposes the response is all 0s (empty registers) 
+                case "g":
+                    this.Respond("00000000000000000000000000000000", ns);
+                    break;
+
                 default:
-                    byte[] msg335 = System.Text.Encoding.ASCII.GetBytes("");
-                    ns.Write(msg335, 0, msg335.Length);
-                    Console.WriteLine(String.Format("Sent: {0}", System.Text.Encoding.UTF8.GetString(msg335)));
+                    this.Respond("", ns);
                     break;
             }
-        }        
+        }
+
+        public void Respond(string response, NetworkStream ns)
+        {
+            if (response != "")
+            {
+                ushort chk = 0;
+                foreach (char c in response)
+                {
+                    chk += (ushort)Convert.ToInt16(c);
+                }
+                chk %= 256;
+                byte[] msg = System.Text.Encoding.UTF8.GetBytes("$" + response + "#" + chk.ToString("x2"));
+                ns.Write(msg, 0, msg.Length);
+                Console.WriteLine(String.Format("Sent: {0}", System.Text.Encoding.UTF8.GetString(msg)));
+            }
+            else
+            {
+                byte[] msg = System.Text.Encoding.UTF8.GetBytes("");
+                ns.Write(msg, 0, msg.Length);
+                Console.WriteLine(String.Format("Sent: {0}", System.Text.Encoding.UTF8.GetString(msg)));
+            }
+        }
     }
 }
