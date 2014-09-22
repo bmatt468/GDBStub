@@ -171,10 +171,18 @@ namespace GDBStub
                 // phase of handshake
                 // client asks for state of registers
                 // server responds with register state
-                // format for response is XX, where XX is the 2 byte representation of the register
+                // format for response is XX..., where XX is the byte representation of the register
                 // for testing purposes the response is all 0s (empty registers) 
                 case "g":
                     this.Respond("00000000000000000000000000000000", ns);
+                    break;
+
+                // client asks for state of specific register
+                // server responds with register state
+                // format for response is XX, where XX... is the byte representation of the register
+                // for testing purposes the response is all 0s (empty) 
+                case "pf":
+                    this.Respond("00000000", ns);
                     break;
 
                 default:
