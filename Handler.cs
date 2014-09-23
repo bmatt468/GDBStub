@@ -19,7 +19,7 @@ namespace GDBStub
                 
                 // Get the ip address of the local machine
                 IPAddress[] ips = Dns.GetHostAddresses("localhost");
-                IPAddress localhost = ips[0];
+                IPAddress localhost = ips[1];
 
                 // create new socket on the specified port
                 TcpListener t = new TcpListener(localhost, portNo);
