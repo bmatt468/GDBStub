@@ -50,6 +50,15 @@ namespace GDBStub
             cpu = new CPU(ref RAM,ref reg);
         }
 
+        //returns the register values from r0 - r15
+        public string dumpRegisters(){
+            string output = "";
+            for (int i = 0; i < 15; ++i)
+            {
+                output += reg[i].getRegister();
+            }
+            return output;
+        }
         private void clearRegisters()
         {
 
@@ -98,7 +107,7 @@ namespace GDBStub
                     writeElfToRam(e, elfArray, ref RAM);
 
 
-                    string ramOutput = RAM.displayAtAddress(e.elfphs[0].p_vaddr, 8);
+                    string ramOutput = RAM.getAtAddress((uint)e.elfphs[0].p_vaddr, 8);
                     log = new StreamWriter("log.txt", true);
                     log.WriteLine(ramOutput);
                     log.Close();
@@ -165,7 +174,9 @@ namespace GDBStub
         }//writeElfToRam
 
 
-        //Run, Step, Stop/Break, and Reset
+        // Run, Step, Stop/Break, and Reset
+        // this method will probably be 
+        // refactored into the gdb handler class.
         internal string command(string input)
         {
             StreamWriter log = new StreamWriter("log.txt", true);
@@ -195,20 +206,16 @@ namespace GDBStub
                     output = "RAM: Hash is " + RAM.getHash();
                     break;
                 case "display":
-                    //display the ram at an address
-                    int addr = 0;
+                    //display the ram at an address and registers.
+                    UInt32 addr = 0;
                     int length = 10;
                     try
                     {
-                        addr = Convert.ToInt32(command[1]);
+                        addr = Convert.ToUInt32(command[1]);
                         length = Convert.ToInt32(command[2]);
                     }
                     catch { }
-                    string ramInfo = "RAM:\n" + RAM.displayAtAddress(addr, length);
-                    log = new StreamWriter("log.txt", true);
-                    log.WriteLine(ramInfo);
-                    log.Close();
-                    output = ramInfo;
+                    this.log(addr, length);
                     
                     break;
                 default:
@@ -306,11 +313,26 @@ namespace GDBStub
                 cpu.execute(command);
                 incrementPC();
             } while (is_running);
+
             //finished running, now display!!
             //show the updated registers and disassembly panel to reflect the state of the simulation.\
-
+            this.log();
         }
 
+        private void log(uint addr = 1, int len = 10)
+        {
+            if (addr == 1)
+            {
+                addr = reg[14].ReadWord(0);
+            }
+            StreamWriter log = new StreamWriter("log.txt", true);
+            string ramString = RAM.getAtAddress(addr, len);
+            log.WriteLine("RAM");
+            log.WriteLine(ramString);
+            log.WriteLine("Registers");
+            log.WriteLine(this.dumpRegisters());
+            log.Close();
+        }
         private void incrementPC(uint iter = 4)
         {
             pc = reg[14].ReadWord(0);

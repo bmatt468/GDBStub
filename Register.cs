@@ -15,11 +15,11 @@ namespace GDBStub
         }
 
         //displays the register
-        public string displayRegister()
+        public string getRegister()
         {
             string output = "";
             uint regData = ReadWord(0);
-            output = regData.ToString();
+            output = regData.ToString("X2").PadLeft(8, '0');
             return output;
         }
 

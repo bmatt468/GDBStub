@@ -43,7 +43,7 @@ namespace GDBStub
         }
 
 
-        public string displayAtAddress(int addr, int desiredLines = 8)
+        public string getAtAddress(uint addr, int desiredLines = 8)
         {
             int numOfLines = 0;
             int numOfBytes = 0;

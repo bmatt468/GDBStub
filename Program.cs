@@ -18,12 +18,12 @@ namespace GDBStub
 
         static void Main(string[] args)
         {
-           
+           /*
             Handler h = new Handler();
             h.Listen(8080);
-            /*
+            */
             danielTesting(args);
-           */
+           
         }
 
 
@@ -53,7 +53,7 @@ namespace GDBStub
                     Console.Write("Please input a command: ");
                     string input = Console.ReadLine();
 
-                    while (input != "")
+                    while (input != "q" || input != "")
                     {
                         string result = comp.command(input);
                         Console.WriteLine(result);

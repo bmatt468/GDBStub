@@ -11,6 +11,7 @@ namespace GDBStub
 
     class Handler
     {
+        string registersTestOutput = "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001084";
         public void Listen(int portNo)
         {
             try
@@ -173,8 +174,10 @@ namespace GDBStub
                 // server responds with register state
                 // format for response is XX..., where XX is the byte representation of the register
                 // for testing purposes the response is all 0s (empty registers) 
+                //call dump registers.
+                // computer.dumpRegisters();
                 case "g":
-                    this.Respond("00000000000000000000000000000000", ns);
+                    this.Respond(registersTestOutput, ns);
                     break;
 
                 // client asks for state of specific register
@@ -182,9 +185,10 @@ namespace GDBStub
                 // format for response is XX, where XX... is the byte representation of the register
                 // for testing purposes the response is all 0s (empty) 
                 case "pf":
-                    this.Respond("00000000", ns);
+                    this.Respond("00000000000000000000000000000000", ns);
                     break;
 
+                    
                 default:
                     this.Respond("", ns);
                     break;
