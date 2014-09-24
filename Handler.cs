@@ -8,10 +8,12 @@ using System.Net.Sockets;
 
 namespace GDBStub
 {
-
+    
     class Handler
     {
-        string registersTestOutput = "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001084";
+        Computer myComp = new Computer();
+        
+        //string registersTestOutput = "000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000009";
         public void Listen(int portNo)
         {
             try
@@ -21,6 +23,8 @@ namespace GDBStub
                 // Get the ip address of the local machine
                 IPAddress[] ips = Dns.GetHostAddresses("localhost");
                 IPAddress localhost = ips[0];
+                //for daniel
+                localhost = ips[1];
 
                 // create new socket on the specified port
                 TcpListener t = new TcpListener(localhost, portNo);
@@ -177,7 +181,8 @@ namespace GDBStub
                 //call dump registers.
                 // computer.dumpRegisters();
                 case "g":
-                    this.Respond(registersTestOutput, ns);
+                    //this.Respond(registersTestOutput, ns);
+                    this.Respond(myComp.dumpRegisters(), ns);
                     break;
 
                 // client asks for state of specific register
@@ -185,7 +190,8 @@ namespace GDBStub
                 // format for response is XX, where XX... is the byte representation of the register
                 // for testing purposes the response is all 0s (empty) 
                 case "pf":
-                    this.Respond("00000000000000000000000000000000", ns);
+
+                    this.Respond(myComp.dumpRegister(14), ns);
                     break;
 
                 // client asks stub if there is a trace experiment running

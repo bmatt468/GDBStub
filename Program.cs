@@ -55,8 +55,7 @@ namespace GDBStub
 
                     while (input != "q" || input != "")
                     {
-                        string result = comp.command(input);
-                        Console.WriteLine(result);
+                        comp.command(input);
                         Console.Write("\nPlease input a command: ");
                         //Run, Step, Stop/Break, and Reset
                         input = Console.ReadLine();
