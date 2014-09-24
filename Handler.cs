@@ -20,7 +20,7 @@ namespace GDBStub
                 
                 // Get the ip address of the local machine
                 IPAddress[] ips = Dns.GetHostAddresses("localhost");
-                IPAddress localhost = ips[1];
+                IPAddress localhost = ips[0];
 
                 // create new socket on the specified port
                 TcpListener t = new TcpListener(localhost, portNo);
@@ -188,16 +188,44 @@ namespace GDBStub
                     this.Respond("00000000000000000000000000000000", ns);
                     break;
 
-                    
-                default:
+                // client asks stub if there is a trace experiment running
+                // server respondss with status
+                // for test purposes the response it T0 (not running)
+                case "qTStatus":
+                    this.Respond("T0", ns);
+                    break;
+
+                case "qTfV":
                     this.Respond("", ns);
                     break;
+                    
+                default:
+                    char c = cmd[0];
+                    switch (c)
+                    {
+                        // client asks for the state of memory
+                        // format of command is 'm addr, length'
+                        // server responds with 32 bit respnse
+                        case 'm':
+                            // parse command
+
+                            // get value
+
+                            // make response
+                            this.Respond("00000000", ns);
+                            break;
+
+                        default:
+                            this.Respond("", ns);
+                            break;
+                    }
+                    break;                   
             }
         }
 
         public void Respond(string response, NetworkStream ns)
         {
-            if (response != "")
+            //if (response != "")
             {
                 ushort chk = 0;
                 foreach (char c in response)
@@ -209,7 +237,7 @@ namespace GDBStub
                 ns.Write(msg, 0, msg.Length);
                 Console.WriteLine(String.Format("Sent: {0}", System.Text.Encoding.UTF8.GetString(msg)));
             }
-            else
+            //else
             {
                 byte[] msg = System.Text.Encoding.UTF8.GetBytes("");
                 ns.Write(msg, 0, msg.Length);

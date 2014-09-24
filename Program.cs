@@ -18,11 +18,11 @@ namespace GDBStub
 
         static void Main(string[] args)
         {
-           /*
+           
             Handler h = new Handler();
             h.Listen(8080);
-            */
-            danielTesting(args);
+            
+            //danielTesting(args);
            
         }
 
