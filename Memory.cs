@@ -48,9 +48,11 @@ namespace GDBStub
             int numOfLines = 0;
             int numOfBytes = 0;
             string output = "";
-            output = "RAM: starting at: " + addr.ToString() + "\n";
+            output = "RAM: starting at: " + addr.ToString("X2").PadLeft(8, '0') + "\n";
+            output += "0x" + addr.ToString("X2").PadLeft(8, '0') + ": ";
             for (; numOfLines < desiredLines && addr < theArray.Length; addr++)
-            { 
+            {
+                
                 output += theArray[addr].ToString("X2");
                 if ((numOfBytes + 1) % 2 == 0 && numOfBytes != 0)
                 {
@@ -59,6 +61,7 @@ namespace GDBStub
                 if ((numOfBytes + 1) % 16 == 0 && numOfBytes != 0)
                 {
                     output += "\n";
+                    output += "0x" + (addr + 1).ToString("X2").PadLeft(8, '0') + ": ";
                     numOfLines += 1;
                 }
                 numOfBytes++;
