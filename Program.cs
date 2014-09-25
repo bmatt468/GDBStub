@@ -30,6 +30,8 @@ namespace GDBStub
         static void danielTesting(string[] args)
         {
             StreamWriter log = new StreamWriter("log.txt");
+            StreamWriter trace = new StreamWriter("trace.log");
+            trace.Close();
             log.WriteLine("Opened the file");
             log.Close();
             if (Option.Instance.parseArgs(args))

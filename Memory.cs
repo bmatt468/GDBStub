@@ -177,5 +177,29 @@ namespace GDBStub
         }
 
 
+
+        internal string dump(uint addr, int length)
+        {
+            string output = "";
+            switch (length)
+            {
+                    //byte?
+                case 1:
+                    output = ReadByte(addr).ToString("X2").PadLeft(8, '0');
+                    break;
+                    //halfword?
+                case 2:
+                    output = ReadHalfWord(addr).ToString("X2").PadLeft(8, '0');
+                    break;
+                    //word?
+                case 3:
+                    output = ReadWord(addr).ToString("X2").PadLeft(8, '0');
+                    break;
+                default:
+
+                    break;
+            }
+            return output;
+        }
     }
 }

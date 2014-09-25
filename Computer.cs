@@ -26,8 +26,8 @@ namespace GDBStub
         bool is_running = false;
         bool N, Z, C, F = false;
         string checkSum = "";
-        Register[] reg = new Register[15];
-        uint step_number;
+        Register[] reg = new Register[16];
+        uint step_number = 0;
         Memory RAM;
         CPU cpu;
         Thread programThread;
@@ -42,7 +42,7 @@ namespace GDBStub
             RAM = new Memory(Option.Instance.getMemSize());
 
 //defines 15 registers, 0 - 14
-            for (int i = 0; i < 15; i++){
+            for (int i = 0; i < 16; i++){
                 reg[i] = new Register();
             }
         
@@ -51,10 +51,16 @@ namespace GDBStub
             cpu = new CPU(ref RAM,ref reg);
         }
 
+
+        public string dumpRAM(uint addr, int length)
+        {
+            return RAM.dump(addr,length);
+        }
+
         //returns the register values from r0 - r15
         public string dumpRegisters(){
             string output = "";
-            for (int i = 0; i < 15; ++i)
+            for (int i = 0; i < 16; ++i)
             {
                 output += reg[i].getRegister();
             }
@@ -68,7 +74,7 @@ namespace GDBStub
         private void clearRegisters()
         {
 
-            for (int i = 0; i < 15; i++)
+            for (int i = 0; i < 16; i++)
             {
                 reg[i].CLEAR();
             }
@@ -102,7 +108,7 @@ namespace GDBStub
                     //introspection!!!Woah!!!
                     e.ReadHeader(elfArray);
 
-                    reg[14].WriteWord(0,e.elfHeader.e_entry);
+                    reg[15].WriteWord(0,e.elfHeader.e_entry);
 
                     writeElfToRam(e, elfArray, ref RAM);
 
@@ -232,6 +238,7 @@ namespace GDBStub
             Option.Instance.setFile(file);
             readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
             checkSum = RAM.getHash();
+            step_number = 0;
             return "RAM: Hash is " + RAM.getHash();
         }
 
@@ -243,7 +250,7 @@ namespace GDBStub
             clearRegisters();
             readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
 
-
+            step_number = 0;
             return "Reset";
         }
 
@@ -309,20 +316,25 @@ namespace GDBStub
             do
             {
                 //fetch, decode, execute commands here
-                uint word = cpu.fetch(reg[14].ReadWord(0));
+                uint word = cpu.fetch(reg[15].ReadWord(0));
                 //break if we fetched a zero!
-                if (word == 0) {
-                    is_running = false;
-                    break;
+                if (word != 0) {
+
+                    //decode the uint!
+                    string command = cpu.decode(word);
+
+                    //exeucte the decoded Command!!
+                    cpu.execute(command);
+                    step_number++;
+
+                    incrementPC();
                 }
-                //decode the uint!
-                string command = cpu.decode(word);
+                else
+                {
+                    is_running = false;
+                }
 
-                //exeucte the decoded Command!!
-                cpu.execute(command);
-                this.trace();
-
-                incrementPC();
+              this.trace();
             } while (is_running);
 
             //finished running, now display!!
@@ -337,11 +349,11 @@ namespace GDBStub
             StreamWriter trace = new StreamWriter("trace.log", true);
             checkSum = RAM.getHash();
             //step_number program_counter checksum nzcf r0 r1 r2 r3
-            trace.WriteLine(step_number.ToString().PadLeft(6, '0') + ' ' + 
-                            reg[14].getRegister()                  + ' ' +
-                            checkSum                               + ' ' + 
+            trace.WriteLine(step_number.ToString().PadLeft(6, '0')  + ' ' + 
+                            reg[15].getRegister()                   + ' ' +
+                            checkSum                                + ' ' + 
                             Convert.ToInt32(N) + Convert.ToInt32(Z) + 
-                            Convert.ToInt32(C) + Convert.ToInt32(F) +
+                            Convert.ToInt32(C) + Convert.ToInt32(F) + ' ' +
                             "0=" + reg[0].getRegister() + ' ' +
                             "1=" + reg[1].getRegister() + ' ' +
                             "2=" + reg[2].getRegister() + ' ' +
@@ -360,28 +372,36 @@ namespace GDBStub
                             "12=" + reg[12].getRegister() + ' ' +
                             "13=" + reg[13].getRegister() + ' ' +
                             "14=" + reg[14].getRegister());
+
+            trace.Close();
         }
 
+
+        
         private void log(uint addr = 1, int len = 10)
         {
             if (addr == 1)
             {
-                addr = reg[14].ReadWord(0);
+                addr = reg[15].ReadWord(0);
             }
             StreamWriter log = new StreamWriter("log.txt", true);
             string ramString = RAM.getAtAddress(addr, len);
             log.WriteLine("RAM");
             log.WriteLine(ramString);
             log.WriteLine("Registers");
+            for (int i = 0; i < 16; ++i)
+            {
+                log.WriteLine(i + "=" + reg[i].getRegister());
+            }
             log.WriteLine(this.dumpRegisters());
             log.Close();
         }
 
         private void incrementPC(uint iter = 4)
         {
-            uint pc = reg[14].ReadWord(0);
+            uint pc = reg[15].ReadWord(0);
             pc += iter;
-            reg[14].WriteWord(0, pc);
+            reg[15].WriteWord(0, pc);
         }
 
     }

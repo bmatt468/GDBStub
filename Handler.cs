@@ -218,7 +218,9 @@ namespace GDBStub
                             // get value
 
                             // make response
-                            this.Respond("00000000", ns);
+                            uint addr = cmd[1];
+                            int length = cmd[2];
+                            this.Respond(myComp.dumpRAM(addr, length), ns);
                             break;
 
                         default:
