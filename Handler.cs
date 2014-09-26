@@ -24,7 +24,7 @@ namespace GDBStub
                 IPAddress[] ips = Dns.GetHostAddresses("localhost");
                 IPAddress localhost = ips[0];
                 //for daniel
-                localhost = ips[1];
+                //localhost = ips[1];
 
                 // create new socket on the specified port
                 TcpListener t = new TcpListener(localhost, portNo);
@@ -41,13 +41,14 @@ namespace GDBStub
                 {
                     // the following lines accept an incoming connection
                     // (from the gdb client), and creates a stream to accept
-                    // data passed to it
+                    // data passed to it. It also created an instance of 
+                    // the computer class that will be used as the 
+                    // simulator for the project
                     TcpClient client = t.AcceptTcpClient();
                     Console.WriteLine("Connection established");
                     NetworkStream ns = client.GetStream();
                     
                     int i = ns.Read(buffer, 0, buffer.Length);
-
                     while (i != 0)
                     {
                         // Translate data bytes to a ASCII string.
@@ -129,10 +130,10 @@ namespace GDBStub
             {
                 // initial phase of handshake
                 // server responds with packetsize (in hex)
-                // for testing purposes the respone is 0x21 (4 32-bit registers 
+                // for testing purposes the respone is 0x79 (15 32-bit registers 
                 // [requiring 8 bits ea.] + 1 extra bit)
                 case "qSupported:qRelocInsn+":
-                    this.Respond("PacketSize=21", ns);
+                    this.Respond("PacketSize=79", ns);
                     break;
 
                 // phase of handshake
@@ -206,6 +207,7 @@ namespace GDBStub
                     break;
                     
                 default:
+                    // handle single character commands
                     char c = cmd[0];
                     switch (c)
                     {
@@ -223,9 +225,52 @@ namespace GDBStub
                             this.Respond(myComp.dumpRAM(addr, length), ns);
                             break;
 
+                        case 'M':
+                            // LOAD AT MEMORY COMMAND
+                            break;
+
+                        case 'G':
+                            // WRITE GEMERAL MEMORY COMMAND
+                            break;
+
+                        case 'k':
+                            // kill client command
+                            // done automatically but looking for clean method
+                            break;
+
+                        case 'p':
+                            // READ REGISTER COMMAND
+                            break;
+
+                        case 'P':
+                            // WRITE REGISTER COMMAND
+                            // SYNTAX: n...=r...
+                            break;
+
+                        case 's':
+                            // SINGLE STEP COMMAND
+                            break;
+                        
+                        case 'X':
+                            // WRITE DATA COMMAND
+                            break;
+
+                        case 'z':
+                            // REMOVE BREAKPOINT COMMAND
+                            break;
+
+                        case 'Z':
+                            // SET BREAKPOINT COMMAND
+
                         default:
                             this.Respond("", ns);
                             break;
+                    }
+
+                    // handle word commands
+                    if (cmd.StartsWith("vRun"))
+                    {
+                        // RUN COMMAND
                     }
                     break;                   
             }
@@ -234,7 +279,7 @@ namespace GDBStub
         public void Respond(string response, NetworkStream ns)
         {
             //if (response != "")
-            {
+            //{
                 ushort chk = 0;
                 foreach (char c in response)
                 {
@@ -244,13 +289,13 @@ namespace GDBStub
                 byte[] msg = System.Text.Encoding.UTF8.GetBytes("$" + response + "#" + chk.ToString("x2"));
                 ns.Write(msg, 0, msg.Length);
                 Console.WriteLine(String.Format("Sent: {0}", System.Text.Encoding.UTF8.GetString(msg)));
-            }
-            //else
+            //}
+            /*else
             {
                 byte[] msg = System.Text.Encoding.UTF8.GetBytes("");
                 ns.Write(msg, 0, msg.Length);
                 Console.WriteLine(String.Format("Sent: {0}", System.Text.Encoding.UTF8.GetString(msg)));
-            }
+            }*/
         }
     }
 }

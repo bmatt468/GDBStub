@@ -41,7 +41,7 @@ namespace GDBStub
         {
             RAM = new Memory(Option.Instance.getMemSize());
 
-//defines 15 registers, 0 - 14
+            //defines 15 registers, 0 - 14
             for (int i = 0; i < 16; i++){
                 reg[i] = new Register();
             }
