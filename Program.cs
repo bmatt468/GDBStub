@@ -18,11 +18,11 @@ namespace GDBStub
 
         static void Main(string[] args)
         {
-           
+            danielTesting(args);
+
             Handler h = new Handler();
             h.Listen(8080);
             
-            //danielTesting(args);
            
         }
 
@@ -30,8 +30,6 @@ namespace GDBStub
         static void danielTesting(string[] args)
         {
             StreamWriter log = new StreamWriter("log.txt");
-            StreamWriter trace = new StreamWriter("trace.log");
-            trace.Close();
             log.WriteLine("Opened the file");
             log.Close();
             if (Option.Instance.parseArgs(args))
@@ -55,7 +53,7 @@ namespace GDBStub
                     Console.Write("Please input a command: ");
                     string input = Console.ReadLine();
 
-                    while (input != "q" || input != "")
+                    while (input != "q" && input != "")
                     {
                         comp.command(input);
                         Console.Write("\nPlease input a command: ");

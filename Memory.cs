@@ -178,7 +178,7 @@ namespace GDBStub
 
 
 
-        internal string dump(uint addr, int length)
+        internal string dump(uint addr = 0, int length = 32)
         {
             string output = "";
             switch (length)

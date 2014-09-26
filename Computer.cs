@@ -25,12 +25,15 @@ namespace GDBStub
         //is running flag
         bool is_running = false;
         bool N, Z, C, F = false;
+        public bool is_tracing = false;
         string checkSum = "";
+
         Register[] reg = new Register[16];
         uint step_number = 0;
         Memory RAM;
         CPU cpu;
         Thread programThread;
+        StreamWriter trace;
 
 
         //instantiate the Computer!!! 
@@ -40,13 +43,15 @@ namespace GDBStub
         public Computer()
         {
             RAM = new Memory(Option.Instance.getMemSize());
+            //toggleTrace();
 
-//defines 15 registers, 0 - 14
+            //defines 15 registers, 0 - 14
             for (int i = 0; i < 16; i++){
                 reg[i] = new Register();
             }
         
-
+            //activate trace for the first time
+            //trace = new StreamWriter("trace.log", false);
 
             cpu = new CPU(ref RAM,ref reg);
         }
@@ -67,10 +72,23 @@ namespace GDBStub
             return output;
         }
 
+        /// dumps a single register of data
+        /// in the form XX.. where XX is the hex
+        /// data from the specified register
+        /// Registers range from 0-15
+        /// 
+        /// param name="n" Unsigned 32 bit integer that references
+        /// the register asked for
+        /// returns A string
         public string dumpRegister(UInt32 n)
         {
             return reg[n].getRegister();
         }
+
+        /// <summary>
+        /// Clears the data from all of 
+        /// The Registers.
+        /// </summary>
         private void clearRegisters()
         {
 
@@ -210,6 +228,9 @@ namespace GDBStub
                 case "load":
                     output = this.load(command[1]);
                     break;
+                case "trace":
+                    this.toggleTrace();
+                    break;
                 case "display":
                     //display the ram at an address and registers.
                     UInt32 addr = 0;
@@ -333,8 +354,12 @@ namespace GDBStub
                 {
                     is_running = false;
                 }
-
-              this.trace();
+                //write to the trace log...
+                if (is_tracing)
+                {
+                    this.writeTrace();
+                }
+                    
             } while (is_running);
 
             //finished running, now display!!
@@ -342,11 +367,31 @@ namespace GDBStub
             this.log();
         }
 
+
+
+        private void toggleTrace()
+        {
+            if (!is_tracing) //start tracing
+            {
+                //turn tracing on
+                is_tracing = true;
+                //open the file and clear its contents
+                trace = new StreamWriter("trace.log", false);
+            }
+            else
+            {
+                //turn off tracing
+                is_tracing = false;
+                //close the trace file.
+                trace.Close();
+            }
+        }
+
         // if enabled will write to the trace.log file
         // to keep a trace
-        private void trace()
+        private void writeTrace()
         {
-            StreamWriter trace = new StreamWriter("trace.log", true);
+            
             checkSum = RAM.getHash();
             //step_number program_counter checksum nzcf r0 r1 r2 r3
             trace.WriteLine(step_number.ToString().PadLeft(6, '0')  + ' ' + 
@@ -372,8 +417,7 @@ namespace GDBStub
                             "12=" + reg[12].getRegister() + ' ' +
                             "13=" + reg[13].getRegister() + ' ' +
                             "14=" + reg[14].getRegister());
-
-            trace.Close();
+            trace.Flush();
         }
 
 
@@ -404,5 +448,17 @@ namespace GDBStub
             reg[15].WriteWord(0, pc);
         }
 
+        // returns the tracing data for gdb
+        public string getTraceStatus()
+        {
+            if (is_tracing)
+            {
+                return "T1";
+            }
+            else
+            {
+                return "T0";
+            }
+        }
     }
 }

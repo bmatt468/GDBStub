@@ -198,7 +198,7 @@ namespace GDBStub
                 // server respondss with status
                 // for test purposes the response it T0 (not running)
                 case "qTStatus":
-                    this.Respond("T0", ns);
+                    this.Respond(myComp.getTraceStatus(), ns);
                     break;
 
                 case "qTfV":
