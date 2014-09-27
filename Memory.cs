@@ -177,29 +177,16 @@ namespace GDBStub
         }
 
 
-
-        internal string dump(uint addr = 0, int length = 32)
+        //returns a byte array of specified size
+        //need ot know what size means
+        internal byte[] dump(uint addr = 0, int length = 32)
         {
-            string output = "";
-            switch (length)
+            byte[] output = new byte[length];
+            for (int i = 0; i < length; ++i, ++addr)
             {
-                    //byte?
-                case 1:
-                    output = ReadByte(addr).ToString("X2").PadLeft(8, '0');
-                    break;
-                    //halfword?
-                case 2:
-                    output = ReadHalfWord(addr).ToString("X2").PadLeft(8, '0');
-                    break;
-                    //word?
-                case 3:
-                    output = ReadWord(addr).ToString("X2").PadLeft(8, '0');
-                    break;
-                default:
-
-                    break;
+                output[i] = ReadByte(addr);
             }
-            return output;
+                return output;
         }
     }
 }

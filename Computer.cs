@@ -25,52 +25,82 @@ namespace GDBStub
         //is running flag
         bool is_running = false;
         bool N, Z, C, F = false;
-        public bool is_tracing = false;
         string checkSum = "";
-
-        Register[] reg = new Register[16];
         uint step_number = 0;
+        Logger myLog;
+        Register[] reg = new Register[16];
         Memory RAM;
         CPU cpu;
         Thread programThread;
-        StreamWriter trace;
 
 
         //instantiate the Computer!!! 
         //I don't have a computer yet?  woah!
-        //r14 is the program counter
-
+        //r15 is the program counter
         public Computer()
         {
-            RAM = new Memory(Option.Instance.getMemSize());
-            //toggleTrace();
+            this.RAM = new Memory(Option.Instance.getMemSize());
+            this.myLog = new Logger();
+            this.myLog.clearLog();
+            this.myLog.toggleTrace();
 
-            //defines 15 registers, 0 - 14
+            //defines 15 registers, 0 - 15
             for (int i = 0; i < 16; i++){
-                reg[i] = new Register();
+                this.reg[i] = new Register();
             }
         
             //activate trace for the first time
             //trace = new StreamWriter("trace.log", false);
 
-            cpu = new CPU(ref RAM,ref reg);
+            this.cpu = new CPU(ref RAM,ref reg);
         }
 
 
-        public string dumpRAM(uint addr, int length)
-        {
-            return RAM.dump(addr,length);
-        }
+//--------------- Getters ---------//
+
+        public bool getIsRunning(){ return is_running;}
+//flags
+        public bool getN() { return N; }
+        public bool getZ() { return Z; }
+        public bool getC() { return C; }
+        public bool getF() { return F; }
+
+        public string getCheckSum() { return RAM.getHash(); }
+        public Register getReg(uint r) { return reg[r]; }
+        public Memory getRAM() { return RAM; }
+        public CPU getCPU() { return cpu; }
+        public Logger logger() { return myLog; }
+        public uint getStepNumber(){ return step_number;}
+
+        // returns the tracing data for gdb
+        public bool getTraceStatus(){ return myLog.getTraceStatus(); }
+
+
+//----------Dumpers Kind of like getters--------
+
+
+        //dumps the requested Ram into a byte array
+        public byte[] dumpRAM(uint addr, int length)
+            { return RAM.dump(addr, length); }
+
 
         //returns the register values from r0 - r15
-        public string dumpRegisters(){
-            string output = "";
-            for (int i = 0; i < 16; ++i)
-            {
-                output += reg[i].getRegister();
-            }
+        // in a one byte array.
+        public byte[] dumpRegisters()
+        {
+            byte[] output = new byte[16*4];
+            int outputIndex = 0;
+                for (int regIndex = 0; regIndex < 16; ++regIndex)
+                {
+                    for (uint byteIndex = 0; byteIndex < 4; ++byteIndex, ++outputIndex)
+                    { 
+                        output[outputIndex] = reg[regIndex].ReadByte(byteIndex);
+                    }
+                }
             return output;
         }
+
+
 
         /// dumps a single register of data
         /// in the form XX.. where XX is the hex
@@ -79,11 +109,15 @@ namespace GDBStub
         /// 
         /// param name="n" Unsigned 32 bit integer that references
         /// the register asked for
-        /// returns A string
-        public string dumpRegister(UInt32 n)
-        {
-            return reg[n].getRegister();
-        }
+        /// returns A byte array
+        public byte[] dumpRegister(UInt32 n) { return reg[n].getRegister(); }
+
+
+//-------------- End Getters//
+
+//------------------- Setters
+        private void toggleTrace() { myLog.toggleTrace(); }
+
 
         /// <summary>
         /// Clears the data from all of 
@@ -91,15 +125,13 @@ namespace GDBStub
         /// </summary>
         private void clearRegisters()
         {
-
             for (int i = 0; i < 16; i++)
             {
                 reg[i].CLEAR();
             }
-               
         }
 
-
+//------- ELF code
         //reads the ELF
         /* Error codes:
          *  0 = OK
@@ -198,73 +230,33 @@ namespace GDBStub
 
         }//writeElfToRam
 
+//End ELF code
+
+//-------End Setters------
+
 
         // Run, Step, Stop/Break, and Reset
-        // this method will probably be 
-        // refactored into the gdb handler class.
-        internal void command(string input)
-        {
-            StreamWriter log = new StreamWriter("log.txt", true);
-            log.WriteLine("Comp: Command = " + input);
-            log.Close();
-            string output = "";
-            string[] command = input.Split(' ');
-            switch (command[0].ToLower())
-            {
-                case "run":
-                    //dostuff
-                    output = this.run();
-                    break;
-                case "step":
-                    output = this.step();
-                    break;
-                case "stop":
-                case "break":
-                    output = this.stop();
-                    break;
-                case "reset":
-                    output = this.reset();
-                    break;
-                case "load":
-                    output = this.load(command[1]);
-                    break;
-                case "trace":
-                    this.toggleTrace();
-                    break;
-                case "display":
-                    //display the ram at an address and registers.
-                    UInt32 addr = 0;
-                    int length = 10;
-                    try
-                    {
-                        addr = Convert.ToUInt32(command[1]);
-                        length = Convert.ToInt32(command[2]);
-                    }
-                    catch { }
-                    this.log(addr, length);
-                    
-                    break;
-                default:
-                    output += "Invalid Command: valid commands are:\nrun \nstep \nstop/break \nreset \ndisplay [addr] [lines]";
-                    break;
-            }
-             log = new StreamWriter("log.txt", true);
-             log.WriteLine(output);
-             log.Close();
-        }
+ 
 
-        private string load(string file)
-        {
 
+ //---------------Actions
+ //Load, Reset, Stop, Step, and Run and Go.
+        private void load(string file)
+        {
             Option.Instance.setFile(file);
             readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
             checkSum = RAM.getHash();
             step_number = 0;
-            return "RAM: Hash is " + RAM.getHash();
+            myLog.writeLog("RAM: Hash is " + RAM.getHash());
         }
 
-    
-        public string reset()
+    /*resets the program by:
+     * clearing the Ram
+     * clearing the REgisters
+     * reading in the most recently loaded file
+     * resetting the step number
+     */
+        public void reset()
         {
             //reset logic
             RAM.CLEAR();
@@ -272,25 +264,35 @@ namespace GDBStub
             readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
 
             step_number = 0;
-            return "Reset";
+            myLog.writeLog("Reset");
         }
 
-        public string stop()
+        /*
+         * Stops the program by 
+         * setting the is_running flag to false, which
+         * will cancel any thread that is running
+         */
+        public void stop()
         {
             if (is_running)
             {
                 //stop logic
-                //programThread.Abort();
                 is_running = false;
-                return "Stopped";
+                myLog.writeLog("Stopped");
             }
             else
             {
-                return "Already Stopped";
+               myLog.writeLog("Already Stopped");
             }
         }
 
-        public string step()
+        /*
+         * steps through the program
+         * by going through one
+         * fetch, decode, execute cycle
+         * uses a thread
+         */
+        public void step()
         {
             if (!is_running)
             {
@@ -300,17 +302,23 @@ namespace GDBStub
                 programThread = new Thread(new ThreadStart(this.go));
 
                 programThread.Start();
+                //waits for thread to get moving.
                 while (!programThread.IsAlive) ;
 
-                return "Step";
+                myLog.writeLog("Step");
             }
             else
             {
-                return "Cannot step, program is running";
+               myLog.writeLog("Cannot step, program is running");
             }
         }
-
-        public string run()
+        /*
+         * Runs through the program
+         * reading from ram until it hits a zero
+         * or the is_running flag is set to false
+         * uses a thread
+         */
+        public void run()
         {
             if (!is_running)
             {
@@ -319,18 +327,28 @@ namespace GDBStub
 
                 // Start the thread
                 programThread = new Thread(new ThreadStart(this.go));
-
                 programThread.Start();
+                //wait for thread to get going.
                 while (!programThread.IsAlive) ;
 
-                return "Running";
+               myLog.writeLog("Running");
             }
             else
             {
-                return "Already Running";
+                myLog.writeLog("Already Running");
             }
         }
 
+        /*
+         * the Go method.
+         * goes through a fetch, decode execute cycle
+         * until the is_running flag is set to false
+         * is a do__while loop
+         * so it will occur at least once
+         * this lets the step function call it without changing the flag
+         * MULTITHREADED FUNCTIONS CALL THIS!!! 
+         * TO BE USED BY A THREAD
+         */
         private void go()
         {
          
@@ -355,91 +373,13 @@ namespace GDBStub
                     is_running = false;
                 }
                 //write to the trace log...
-                if (is_tracing)
-                {
-                    this.writeTrace();
-                }
+                myLog.writeTrace(this);
                     
             } while (is_running);
 
-            //finished running, now display!!
-            //show the updated registers and disassembly panel to reflect the state of the simulation.\
-            this.log();
+
         }
 
-
-
-        private void toggleTrace()
-        {
-            if (!is_tracing) //start tracing
-            {
-                //turn tracing on
-                is_tracing = true;
-                //open the file and clear its contents
-                trace = new StreamWriter("trace.log", false);
-            }
-            else
-            {
-                //turn off tracing
-                is_tracing = false;
-                //close the trace file.
-                trace.Close();
-            }
-        }
-
-        // if enabled will write to the trace.log file
-        // to keep a trace
-        private void writeTrace()
-        {
-            
-            checkSum = RAM.getHash();
-            //step_number program_counter checksum nzcf r0 r1 r2 r3
-            trace.WriteLine(step_number.ToString().PadLeft(6, '0')  + ' ' + 
-                            reg[15].getRegister()                   + ' ' +
-                            checkSum                                + ' ' + 
-                            Convert.ToInt32(N) + Convert.ToInt32(Z) + 
-                            Convert.ToInt32(C) + Convert.ToInt32(F) + ' ' +
-                            "0=" + reg[0].getRegister() + ' ' +
-                            "1=" + reg[1].getRegister() + ' ' +
-                            "2=" + reg[2].getRegister() + ' ' +
-                            "3=" + reg[3].getRegister());
-
-            //r4 r5 r6 r7 r8 r9
-            trace.WriteLine("4=" + reg[4].getRegister() + ' ' +
-                            "5=" + reg[5].getRegister() + ' ' +
-                            "6=" + reg[6].getRegister() + ' ' +
-                            "7=" + reg[7].getRegister() + ' ' +
-                            "8=" + reg[8].getRegister() + ' ' +
-                            "9=" + reg[9].getRegister());
-            //r10 r11 r12 r13 r14
-            trace.WriteLine("10=" + reg[10].getRegister() + ' ' +
-                            "11=" + reg[11].getRegister() + ' ' +
-                            "12=" + reg[12].getRegister() + ' ' +
-                            "13=" + reg[13].getRegister() + ' ' +
-                            "14=" + reg[14].getRegister());
-            trace.Flush();
-        }
-
-
-        
-        private void log(uint addr = 1, int len = 10)
-        {
-            if (addr == 1)
-            {
-                addr = reg[15].ReadWord(0);
-            }
-            StreamWriter log = new StreamWriter("log.txt", true);
-            string ramString = RAM.getAtAddress(addr, len);
-            log.WriteLine("RAM");
-            log.WriteLine(ramString);
-            log.WriteLine("Registers");
-            for (int i = 0; i < 16; ++i)
-            {
-                log.WriteLine(i + "=" + reg[i].getRegister());
-            }
-            log.WriteLine(this.dumpRegisters());
-            log.Close();
-        }
 
         private void incrementPC(uint iter = 4)
         {
@@ -448,17 +388,59 @@ namespace GDBStub
             reg[15].WriteWord(0, pc);
         }
 
-        // returns the tracing data for gdb
-        public string getTraceStatus()
+
+// end Actions
+        // this method will probably be 
+        // refactored into the gdb handler class.
+        internal void command(string input)
         {
-            if (is_tracing)
+            myLog.writeLog("Comp: Command = " + input);
+
+            string output = "";
+            string[] command = input.Split(' ');
+            switch (command[0].ToLower())
             {
-                return "T1";
+                case "run":
+                    //dostuff
+                    this.run();
+                    break;
+                case "step":
+                    this.step();
+                    break;
+                case "stop":
+                case "break":
+                    this.stop();
+                    break;
+                case "reset":
+                    this.reset();
+                    break;
+                case "load":
+                    this.load(command[1]);
+                    break;
+                case "trace":
+                    this.myLog.toggleTrace();
+                    break;
+                case "display":
+                    //display the ram at an address and registers.
+                    UInt32 addr = 0;
+                    int length = 10;
+                    try
+                    {
+                        addr = Convert.ToUInt32(command[1]);
+                        length = Convert.ToInt32(command[2]);
+                    }
+                    catch { }
+                    //log data
+                    myLog.writeLog(RAM.getAtAddress(addr, length));
+
+                    break;
+                default:
+                    output += "Invalid Command: valid commands are:\nrun \nstep \nstop/break \nreset \ndisplay [addr] [lines]";
+                    break;
             }
-            else
-            {
-                return "T0";
-            }
+            myLog.writeLog(output);
         }
+
+
     }
 }

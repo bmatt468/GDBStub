@@ -18,7 +18,7 @@ namespace GDBStub
 
         static void Main(string[] args)
         {
-            danielTesting(args);
+            //danielTesting(args);
 
             Handler h = new Handler();
             h.Listen(8080);
@@ -29,9 +29,7 @@ namespace GDBStub
 
         static void danielTesting(string[] args)
         {
-            StreamWriter log = new StreamWriter("log.txt");
-            log.WriteLine("Opened the file");
-            log.Close();
+
             if (Option.Instance.parseArgs(args))
             {
                 if (Option.Instance.getTest())
