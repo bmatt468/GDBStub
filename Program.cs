@@ -18,10 +18,29 @@ namespace GDBStub
 
         static void Main(string[] args)
         {
-            //danielTesting(args);
+            if (Option.Instance.parseArgs(args))    //verify the proper command line input
+            {
+                if (Option.Instance.getFile() != "")
+                {
+                    //wanted some data to play with
+                    //specified through command line, load the file
+                    Computer.Instance.readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
+                }
 
-            Handler h = new Handler();
-            h.Listen(8080);
+                if (Option.Instance.getDebug())
+                {   
+
+                    Handler h = new Handler();
+                    
+                    h.Listen(8080);
+	            }
+                //if debug flag is not set. run
+
+                
+                danielTesting(args);
+
+            
+            }
             
            
         }
@@ -30,8 +49,6 @@ namespace GDBStub
         static void danielTesting(string[] args)
         {
 
-            if (Option.Instance.parseArgs(args))
-            {
                 if (Option.Instance.getTest())
                 {
                     //run tests
@@ -40,29 +57,25 @@ namespace GDBStub
                     Console.WriteLine("All tests passed see log.txt for details");
 
                 }
-                    Computer comp = new Computer();
                     if (Option.Instance.getFile() != "")
                     {
                         //specified through command line, load the file
-                        comp.readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
+                        Computer.Instance.readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
                     }
-
+            //THis will be replaces later
+            //with information of just running
                     Console.WriteLine("\n");
                     Console.Write("Please input a command: ");
                     string input = Console.ReadLine();
 
                     while (input != "q" && input != "")
                     {
-                        comp.command(input);
+                        Computer.Instance.command(input);
                         Console.Write("\nPlease input a command: ");
                         //Run, Step, Stop/Break, and Reset
                         input = Console.ReadLine();
                     }
-             }
-             else
-             {
-                   //invalid command line arguments
-             }
+
          }//DanielTest
 
 
@@ -71,4 +84,5 @@ namespace GDBStub
 
 
 }//namespace
+
 

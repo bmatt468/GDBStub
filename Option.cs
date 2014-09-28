@@ -30,6 +30,7 @@ namespace GDBStub
         public int memSize = 32768;
         public bool test = false;
         public bool valid;
+        bool debugFlag =false;
 
 
         //-----------------Getters
@@ -51,6 +52,13 @@ namespace GDBStub
             output += "\nValid input is: armsim --load elf-file [ --mem memory-size ] [ --test]";
             Console.WriteLine(output);
         }
+
+
+        internal bool getDebug()
+        {
+            return debugFlag;
+        }
+
         //------------------Setters
         public void setTest(bool newTest)
         {
@@ -95,7 +103,9 @@ namespace GDBStub
                     case "--test":
                         test = true;
                         break;
-
+                    case "--debug":
+                        debugFlag = true;
+                        break;
                     default:
                         //this can be the helper instructions
                         getError(inpu[i] + " is an invalid option.");
@@ -110,6 +120,7 @@ namespace GDBStub
             }
             return valid;
         }
+
     }
 
 }

@@ -55,6 +55,7 @@ namespace GDBStub
             comp.logger().writeLog("Test: All Hashes correct\n");
 
             comp.logger().toggleTrace();
+            comp.reset();
 
         }
 
@@ -108,6 +109,7 @@ namespace GDBStub
             Debug.Assert(flagRes == false);
 
             log.writeLog("Test: All Ram Tests passed\n");
+            log.closeTrace();
             tram.CLEAR();
 
         }

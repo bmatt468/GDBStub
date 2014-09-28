@@ -33,6 +33,19 @@ namespace GDBStub
         CPU cpu;
         Thread programThread;
 
+        private static Computer instance;
+
+        public static Computer Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = new Computer();
+                }
+                return instance;
+            }
+        }
 
         //instantiate the Computer!!! 
         //I don't have a computer yet?  woah!

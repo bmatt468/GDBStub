@@ -11,9 +11,7 @@ namespace GDBStub
     
     class Handler
     {
-        Computer myComp = new Computer();
         
-        //string registersTestOutput = "000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000009";
         public void Listen(int portNo)
         {
             try
@@ -24,7 +22,7 @@ namespace GDBStub
                 IPAddress[] ips = Dns.GetHostAddresses("localhost");
                 IPAddress localhost = ips[0];
                 //for daniel
-                //localhost = ips[1];
+                localhost = ips[1];
 
                 // create new socket on the specified port
                 TcpListener t = new TcpListener(localhost, portNo);
@@ -179,12 +177,13 @@ namespace GDBStub
                 // server responds with register state
                 // format for response is XX..., where XX is the byte representation of the register
                 // for testing purposes the response is all 0s (empty registers) 
-                //call dump registers.
+                
                 // computer.dumpRegisters();
                 case "g":
-                    this.Respond("0000000000000000", ns);
-                    //myComp.dumpRegisters()
-                   // this.Respond("", ns);
+
+                    // byte[] of the reg data. will be 64 bytes
+                    //Computer.Instance.dumpRegisters();
+                    this.Respond(byteArrayToString(Computer.Instance.dumpRegisters(), 64), ns);
                     break;
 
                 // client asks for state of specific register
@@ -192,15 +191,17 @@ namespace GDBStub
                 // format for response is XX, where XX... is the byte representation of the register
                 // for testing purposes the response is all 0s (empty) 
                 case "pf":
-                    //myComp.dumpRegister(14)
-                    this.Respond("0000000000000000", ns);
+
+                    // byte[] of one register, will be 4 bytes
+                    this.Respond(byteArrayToString(Computer.Instance.dumpRegister(15), 4), ns);
                     break;
 
                 // client asks stub if there is a trace experiment running
                 // server respondss with status
                 // for test purposes the response it T0 (not running)
                 case "qTStatus":
-                    //myComp.getTraceStatus();
+                    //returns true or false based ont he tracer.
+                    //Computer.Instance.getTraceStatus();
                     this.Respond("T0", ns);
                     break;
 
@@ -214,56 +215,80 @@ namespace GDBStub
                     switch (c)
                     {
                         // client asks for the state of memory
-                        // format of command is 'm addr, length'
+                        // format of command is 'mAddr,length'
+                        // NOTE** info will come in in HEX
                         // server responds with 32 bit respnse
                         case 'm':
                             // parse command
+                            cmd = cmd.Remove(0, 1);
+                            string[] addrAndLength = cmd.Split(',');
 
-                            // get value
-
+                            // get value 
+                            uint addr = Convert.ToUInt32(addrAndLength[0],16);
+                            int length = Convert.ToInt32(addrAndLength[1],16);
+                            
+                            // returns a byte[] of the RAM from starting address for length bytes
                             // make response
-                            uint addr = cmd[1];
-                            int length = cmd[2];
-                            //myComp.dumpRAM(addr, length);
+                            this.Respond( byteArrayToString(Computer.Instance.dumpRAM(addr, length), length), ns);
 
                             break;
 
                         case 'M':
                             // LOAD AT MEMORY COMMAND
+                            Console.WriteLine("Load at mem");
+                            Console.WriteLine(cmd);
                             break;
 
                         case 'G':
-                            // WRITE GEMERAL MEMORY COMMAND
+                            // WRITE GENERAL MEMORY COMMAND
+                            Console.WriteLine("General Mem");
+                            Console.WriteLine(cmd);
                             break;
 
                         case 'k':
                             // kill client command
                             // done automatically but looking for clean method
+                            Console.WriteLine("Kill");
                             break;
 
                         case 'p':
                             // READ REGISTER COMMAND
+                            this.Respond(byteArrayToString(Computer.Instance.dumpRegister(15),4), ns);
+                            Console.WriteLine("Print Register");
+                            Console.WriteLine(cmd);
                             break;
 
                         case 'P':
                             // WRITE REGISTER COMMAND
                             // SYNTAX: n...=r...
+                            Console.WriteLine("Write Register");
+                            Console.WriteLine(cmd);
                             break;
 
                         case 's':
                             // SINGLE STEP COMMAND
+
+                            Console.WriteLine("Step");
+                            Console.WriteLine(cmd);
                             break;
                         
                         case 'X':
                             // WRITE DATA COMMAND
+                            Console.WriteLine("Write Data Command");
+                            Console.WriteLine(cmd);
                             break;
 
                         case 'z':
                             // REMOVE BREAKPOINT COMMAND
+                            Console.WriteLine("Remove Break point");
+                            Console.WriteLine(cmd);
                             break;
 
                         case 'Z':
                             // SET BREAKPOINT COMMAND
+                            Console.WriteLine("Set BreakPoint");
+                            Console.WriteLine(cmd);
+                            break;
 
                         default:
                             this.Respond("", ns);
@@ -277,6 +302,16 @@ namespace GDBStub
                     }
                     break;                   
             }
+        }
+
+        private string byteArrayToString(byte[] memory, int length)
+        {
+            string output = "";
+            for (int i = 0; i < length; ++i)
+            {
+                output += memory[i].ToString().PadLeft(2, '0');
+            }
+            return output;
         }
 
         public void Respond(string response, NetworkStream ns)
