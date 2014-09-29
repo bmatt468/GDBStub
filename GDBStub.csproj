@@ -65,6 +65,7 @@
     <Compile Include="CPU.cs" />
     <Compile Include="ELF.cs" />
     <Compile Include="Handler.cs" />
+    <Compile Include="instruction.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="Memory.cs" />
     <Compile Include="Option.cs" />

@@ -35,22 +35,21 @@ namespace GDBStub
 
 
         //fetches data from RAM 
-        public uint fetch(uint pc)
+        public uint fetch()
         {
-            
-            return RAM.ReadWord(pc); 
+
+            return RAM.ReadWord(reg[15].ReadWord(0)); 
            
 
         }
 
         //decodes the int into a command.  like mov r0, r1
-        public string decode(uint data)
+        instruction decode(uint data)
         {
-            string output = "";
-            //decode data
+            instruction output = new instruction(data);
 
 
-            output += data.ToString("X2");
+            
             return output;
         }
 

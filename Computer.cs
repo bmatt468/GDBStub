@@ -368,17 +368,17 @@ namespace GDBStub
             do
             {
                 //fetch, decode, execute commands here
-                uint word = cpu.fetch(reg[15].ReadWord(0));
+                uint rawInstruction = cpu.fetch();
                 //break if we fetched a zero!
-                if (word != 0) {
+                if (rawInstruction != 0) {
 
                     //decode the uint!
-                    string command = cpu.decode(word);
+                    instruction cookedInstruction = cpu.decode(rawInstruction);
 
                     //exeucte the decoded Command!!
-                    cpu.execute(command);
-                    step_number++;
+                    cpu.execute(cookedInstruction);
 
+                    step_number++;
                     incrementPC();
                 }
                 else
