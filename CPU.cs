@@ -44,7 +44,7 @@ namespace GDBStub
         }
 
         //decodes the int into a command.  like mov r0, r1
-        instruction decode(uint data)
+        public instruction decode(uint data)
         {
             instruction output = new instruction(data);
 
@@ -54,7 +54,7 @@ namespace GDBStub
         }
 
         //executes the actual data by movine registers and stuff
-        public void execute(string command)
+        public void execute(instruction command)
         {
 
         }
