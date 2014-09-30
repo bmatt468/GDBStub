@@ -154,8 +154,8 @@ namespace GDBStub
 
         public void writeRAM(uint addr, byte[] x ) 
         {
-
-            for (int i = 0; addr < addr + x.Length; ++addr, ++i)
+            uint baseAddr = addr;
+            for (int i = 0; addr < baseAddr + x.Length; ++addr, ++i)
             {
                 RAM.WriteByte(addr, x[i]);
             }
