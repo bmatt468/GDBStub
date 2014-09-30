@@ -128,7 +128,7 @@ namespace GDBStub
                 log.WriteLine(p);
                 
             }
-            catch { }
+            catch { Console.WriteLine(p); }
         }
 
     }

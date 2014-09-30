@@ -27,7 +27,7 @@ namespace GDBStub
         bool N, Z, C, F = false;
         string checkSum = "";
         uint step_number = 0;
-        Dictionary<uint, uint> storedCommands;
+        Dictionary<uint, uint> storedCommands = new Dictionary<uint,uint>();
 
         Register[] reg = new Register[16];
         Memory RAM;
@@ -194,8 +194,14 @@ namespace GDBStub
 
         private void removeBreakPoint(uint addr)
         {
-            RAM.WriteWord(addr, storedCommands[addr]);
-
+            try
+            {
+                RAM.WriteWord(addr, storedCommands[addr]);
+            }
+            catch 
+            { 
+            //not a breakpoint
+            }
         }
 
 //-------End Setters------
@@ -482,6 +488,10 @@ namespace GDBStub
                 case "breakpoint":
                     addr = Convert.ToUInt16(command[1]);
                     this.makeBreakPoint(addr, 0);
+                    break;
+                case "rbkp":
+                    addr = Convert.ToUInt16(command[1]);
+                    this.removeBreakPoint(addr);
                     break;
                 case "trace":
                     Logger.Instance.toggleTrace();
