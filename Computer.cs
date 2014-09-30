@@ -146,13 +146,13 @@ namespace GDBStub
         /// </summary>
         /// <param name="r">The # of the Register</param>
         /// <param name="x">The amount to be written to a register.</param>
-        private void writeRegister(uint r, uint x)
+        public void writeRegister(uint r, uint x)
         {
             if (r < 16)
                 reg[r].WriteWord(0, x);
         }
 
-        private void writeRAM(uint addr, byte[] x ) 
+        public void writeRAM(uint addr, byte[] x ) 
         {
 
             for (int i = 0; addr < addr + x.Length; ++addr, ++i)
@@ -165,7 +165,7 @@ namespace GDBStub
         /// Clears the data from all of 
         /// The Registers.
         /// </summary>
-        private void clearRegisters()
+        public void clearRegisters()
         {
             for (int i = 0; i < 16; i++)
             {
@@ -180,7 +180,7 @@ namespace GDBStub
         /// </summary>
         /// <param name="addr"></param>
         /// <param name="immed"></param>
-        private void makeBreakPoint(uint addr, ushort immed = 0)
+        public void makeBreakPoint(uint addr, ushort immed = 0)
         {
 
             uint top12 = (uint)(immed & 0xFFF0) << 4;
@@ -193,7 +193,7 @@ namespace GDBStub
 
         }
 
-        private void removeBreakPoint(uint addr)
+        public void removeBreakPoint(uint addr)
         {
             try
             {
