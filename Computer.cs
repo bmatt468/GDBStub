@@ -27,6 +27,7 @@ namespace GDBStub
         bool N, Z, C, F = false;
         string checkSum = "";
         uint step_number = 0;
+        Dictionary<uint, uint> storedCommands;
 
         Register[] reg = new Register[16];
         Memory RAM;
@@ -124,7 +125,18 @@ namespace GDBStub
         public byte[] dumpRegister(UInt32 n) { return reg[n].getRegister(); }
 
 
+
+        private bool isBreakPoint(Memory rawInstruction)
+        {
+            bool output = false;
+            if ((rawInstruction.ReadWord(0) & 0xE1200070) == 0xE1200070)
+                output = true;
+            return output;
+        }
+
 //-------------- End Getters//
+
+
 
 //------------------- Setters
 
@@ -158,6 +170,32 @@ namespace GDBStub
             {
                 reg[i].CLEAR();
             }
+        }
+
+
+        /// <summary>
+        /// Takes the address and the immediate value
+        /// will default to 0
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="immed"></param>
+        private void makeBreakPoint(uint addr, ushort immed = 0)
+        {
+
+            uint top12 = (uint)(immed & 0xFFF0) << 4;
+            uint bot4 = (uint)immed & 0x000F;
+            UInt32 breakPointValue = 0xE1200070 + top12 + bot4;
+            uint saveCommand = RAM.ReadWord(addr);
+            storedCommands[addr] = saveCommand;
+
+            RAM.WriteWord(addr, breakPointValue);
+
+        }
+
+        private void removeBreakPoint(uint addr)
+        {
+            RAM.WriteWord(addr, storedCommands[addr]);
+
         }
 
 //-------End Setters------
@@ -378,7 +416,7 @@ namespace GDBStub
                 //fetch, decode, execute commands here
                 Memory rawInstruction = cpu.fetch();
                 //break if we fetched a zero!
-                if (rawInstruction.ReadWord(0) != 0) {
+                if (rawInstruction.ReadWord(0) != 0 && !isBreakPoint(rawInstruction)) {
 
                     //decode the uint!
                     Instruction cookedInstruction = cpu.decode(rawInstruction);
@@ -403,6 +441,7 @@ namespace GDBStub
         }
 
 
+
         private void incrementPC(uint iter = 4)
         {
             uint pc = reg[15].ReadWord(0);
@@ -420,6 +459,7 @@ namespace GDBStub
 
             string output = "";
             string[] command = input.Split(' ');
+            uint addr;
             switch (command[0].ToLower())
             {
                 case "run":
@@ -439,12 +479,16 @@ namespace GDBStub
                 case "load":
                     this.load(command[1]);
                     break;
+                case "breakpoint":
+                    addr = Convert.ToUInt16(command[1]);
+                    this.makeBreakPoint(addr, 0);
+                    break;
                 case "trace":
                     Logger.Instance.toggleTrace();
                     break;
                 case "display":
                     //display the ram at an address and registers.
-                    UInt32 addr = 0;
+                    addr = 0;
                     int length = 10;
                     try
                     {
@@ -462,6 +506,8 @@ namespace GDBStub
             }
             Logger.Instance.writeLog(output);
         }
+
+
 
 
     }
