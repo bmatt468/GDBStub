@@ -27,7 +27,7 @@ namespace GDBStub
         bool N, Z, C, F = false;
         string checkSum = "";
         uint step_number = 0;
-        Logger myLog;
+
         Register[] reg = new Register[16];
         Memory RAM;
         CPU cpu;
@@ -53,9 +53,8 @@ namespace GDBStub
         public Computer()
         {
             this.RAM = new Memory(Option.Instance.getMemSize());
-            this.myLog = new Logger();
-            this.myLog.clearLog();
-            this.myLog.toggleTrace();
+            
+            Logger.Instance.clearLog();
 
             //defines 15 registers, 0 - 15
             for (int i = 0; i < 16; i++){
@@ -82,11 +81,10 @@ namespace GDBStub
         public Register getReg(uint r) { return reg[r]; }
         public Memory getRAM() { return RAM; }
         public CPU getCPU() { return cpu; }
-        public Logger logger() { return myLog; }
         public uint getStepNumber(){ return step_number;}
 
         // returns the tracing data for gdb
-        public bool getTraceStatus(){ return myLog.getTraceStatus(); }
+        public bool getTraceStatus(){ return Logger.Instance.getTraceStatus(); }
 
 
 //----------Dumpers Kind of like getters--------
@@ -129,7 +127,7 @@ namespace GDBStub
 //-------------- End Getters//
 
 //------------------- Setters
-        private void toggleTrace() { myLog.toggleTrace(); }
+        private void toggleTrace() { Logger.Instance.toggleTrace(); }
 
 
         /// <summary>
@@ -157,9 +155,9 @@ namespace GDBStub
            /* RAM.CLEAR();
             clearRegisters();
             *///opens the log file to append
-            StreamWriter log = new StreamWriter("log.txt", true);
-            log.WriteLine("ELF: Reading ELF file");
-            log.Close();
+           // StreamWriter log = new StreamWriter("log.txt", true);
+            Logger.Instance.writeLog("ELF: Reading ELF file");
+            
             int output = -1;
             try
             {
@@ -178,34 +176,29 @@ namespace GDBStub
 
                     string ramOutput = RAM.getAtAddress((uint)e.elfphs[0].p_vaddr, 8);
 
-                    log = new StreamWriter("log.txt", true);
-                    log.WriteLine(ramOutput);
-                    log.Close();
+                    Logger.Instance.writeLog(ramOutput);
                     Console.WriteLine(ramOutput);
                     output = 0;
                 }
                 else //file to large
                 {
                     output = -3;
-                    log = new StreamWriter("log.txt", true);
-                    log.WriteLine("Err: File to Large");
-                    log.Close();
+                    Logger.Instance.writeLog("Err: File to Large");
+                    
                 }
                
             }
             catch (System.IO.FileNotFoundException) 
             {
                 output = -2;
-                log = new StreamWriter("log.txt", true);
-                log.WriteLine("Err: File not found");
-                log.Close();
+                Logger.Instance.writeLog("Err: File not found");
+                
             }
             catch //general exception
             {
                 output = -1;
-                log = new StreamWriter("log.txt", true);
-                log.WriteLine("Err: Something went wrong");
-                log.Close();
+                Logger.Instance.writeLog("Err: Something went wrong");
+                
             }
             return output;
 
@@ -216,18 +209,18 @@ namespace GDBStub
         public void writeElfToRam(ELFReader e, byte[] elfArray, ref Memory ram)
         {
 
-            //log.WriteLine("RAM: Size {0}", ram.getSize());
+            //Logger.Instance.writeLog("RAM: Size {0}", ram.getSize());
 
 
             for (int prog = 0; prog < e.elfHeader.e_phnum; prog++)
             {
                 uint ramAddress = (uint)e.elfphs[prog].p_vaddr;
-                //log.WriteLine("RAM: Writing to {0} ", ramAddress);
+                //Logger.Instance.writeLog("RAM: Writing to {0} ", ramAddress);
 
                 uint elfOffSet = (uint)e.elfphs[prog].p_offset;
-                //log.WriteLine("ELF: Reading from {0}", e.elfphs[prog].p_offset);
+                //Logger.Instance.writeLog("ELF: Reading from {0}", e.elfphs[prog].p_offset);
 
-                //log.WriteLine("ELF: Size of Segment {0}", e.elfphs[prog].p_filesz);
+                //Logger.Instance.writeLog("ELF: Size of Segment {0}", e.elfphs[prog].p_filesz);
                 uint RamAddressCounter = ramAddress;
                 uint elfOffSetCounter = elfOffSet;
 
@@ -260,7 +253,7 @@ namespace GDBStub
             readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
             checkSum = RAM.getHash();
             step_number = 0;
-            myLog.writeLog("RAM: Hash is " + RAM.getHash());
+            Logger.Instance.writeLog("RAM: Hash is " + RAM.getHash());
         }
 
     /*resets the program by:
@@ -277,7 +270,7 @@ namespace GDBStub
             readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
 
             step_number = 0;
-            myLog.writeLog("Reset");
+            Logger.Instance.writeLog("Reset");
         }
 
         /*
@@ -291,11 +284,11 @@ namespace GDBStub
             {
                 //stop logic
                 is_running = false;
-                myLog.writeLog("Stopped");
+                Logger.Instance.writeLog("Stopped");
             }
             else
             {
-               myLog.writeLog("Already Stopped");
+               Logger.Instance.writeLog("Already Stopped");
             }
         }
 
@@ -318,11 +311,11 @@ namespace GDBStub
                 //waits for thread to get moving.
                 while (!programThread.IsAlive) ;
 
-                myLog.writeLog("Step");
+                Logger.Instance.writeLog("Step");
             }
             else
             {
-               myLog.writeLog("Cannot step, program is running");
+               Logger.Instance.writeLog("Cannot step, program is running");
             }
         }
         /*
@@ -344,11 +337,11 @@ namespace GDBStub
                 //wait for thread to get going.
                 while (!programThread.IsAlive) ;
 
-               myLog.writeLog("Running");
+               Logger.Instance.writeLog("Running");
             }
             else
             {
-                myLog.writeLog("Already Running");
+                Logger.Instance.writeLog("Already Running");
             }
         }
 
@@ -364,16 +357,16 @@ namespace GDBStub
          */
         private void go()
         {
-         
+         //mutex lock
             do
             {
                 //fetch, decode, execute commands here
-                uint rawInstruction = cpu.fetch();
+                Memory rawInstruction = cpu.fetch();
                 //break if we fetched a zero!
-                if (rawInstruction != 0) {
+                if (rawInstruction.ReadWord(0) != 0) {
 
                     //decode the uint!
-                    instruction cookedInstruction = cpu.decode(rawInstruction);
+                    Instruction cookedInstruction = cpu.decode(rawInstruction);
 
                     //exeucte the decoded Command!!
                     cpu.execute(cookedInstruction);
@@ -386,10 +379,11 @@ namespace GDBStub
                     is_running = false;
                 }
                 //write to the trace log...
-                myLog.writeTrace(this);
+                Logger.Instance.writeTrace(this);
                     
             } while (is_running);
 
+            //mutex unlock
 
         }
 
@@ -407,7 +401,7 @@ namespace GDBStub
         // refactored into the gdb handler class.
         internal void command(string input)
         {
-            myLog.writeLog("Comp: Command = " + input);
+            Logger.Instance.writeLog("Comp: Command = " + input);
 
             string output = "";
             string[] command = input.Split(' ');
@@ -431,7 +425,7 @@ namespace GDBStub
                     this.load(command[1]);
                     break;
                 case "trace":
-                    this.myLog.toggleTrace();
+                    Logger.Instance.toggleTrace();
                     break;
                 case "display":
                     //display the ram at an address and registers.
@@ -444,14 +438,14 @@ namespace GDBStub
                     }
                     catch { }
                     //log data
-                    myLog.writeLog(RAM.getAtAddress(addr, length));
+                    Logger.Instance.writeLog(RAM.getAtAddress(addr, length));
 
                     break;
                 default:
                     output += "Invalid Command: valid commands are:\nrun \nstep \nstop/break \nreset \ndisplay [addr] [lines]";
                     break;
             }
-            myLog.writeLog(output);
+            Logger.Instance.writeLog(output);
         }
 
 

@@ -21,9 +21,9 @@ namespace GDBStub
             Memory ram = new Memory(32768);
             Computer comp = new Computer();
 
-            comp.logger().writeLog("Test: Starting Simulator unit tests");
+            Logger.Instance.writeLog("Test: Starting Simulator unit tests");
 
-            comp.logger().writeLog("Test: Testing Hash of test1.exe");
+            Logger.Instance.writeLog("Test: Testing Hash of test1.exe");
             byte[] elfArray = File.ReadAllBytes("test1.exe");
             e.ReadHeader(elfArray);
 
@@ -35,7 +35,7 @@ namespace GDBStub
 
             ram.CLEAR();
 
-            comp.logger().writeLog("Test: Testing Hash of test2.exe");
+            Logger.Instance.writeLog("Test: Testing Hash of test2.exe");
             elfArray = File.ReadAllBytes("test2.exe");
             e.ReadHeader(elfArray);
             comp.writeElfToRam(e, elfArray, ref ram);
@@ -45,16 +45,16 @@ namespace GDBStub
 
             ram.CLEAR();
 
-            comp.logger().writeLog("Test: Testing Hash of test3.exe");
+            Logger.Instance.writeLog("Test: Testing Hash of test3.exe");
             elfArray = File.ReadAllBytes("test3.exe");
             e.ReadHeader(elfArray);
             comp.writeElfToRam(e, elfArray, ref ram);
             resultHash = ram.getHash();
             hash = "977159b662ac4e450ed62063fba27029";
             Debug.Assert(hash.ToUpper() == resultHash);
-            comp.logger().writeLog("Test: All Hashes correct\n");
+            Logger.Instance.writeLog("Test: All Hashes correct\n");
 
-            comp.logger().toggleTrace();
+            Logger.Instance.toggleTrace();
             comp.reset();
 
         }
@@ -68,11 +68,10 @@ namespace GDBStub
         {
 
             //append
-            Logger log = new Logger();
-            log.writeLog("Test: Starting RAM unit tests");
+            Logger.Instance.writeLog("Test: Starting RAM unit tests");
             Memory tram = new Memory(32768);
 
-            log.writeLog("Test: Read/Write Byte");
+            Logger.Instance.writeLog("Test: Read/Write Byte");
             byte byteRes = tram.ReadByte(0);
             Debug.Assert(byteRes == 0);
             tram.WriteByte(0, 0xee);
@@ -81,7 +80,7 @@ namespace GDBStub
 
             tram.CLEAR();
 
-            log.writeLog("Test: Read/Write HalfWord");
+            Logger.Instance.writeLog("Test: Read/Write HalfWord");
             ushort shortRes = tram.ReadHalfWord(0);
             Debug.Assert(shortRes == 0);
             tram.WriteHalfWord(0, 0xeef);
@@ -90,7 +89,7 @@ namespace GDBStub
 
             tram.CLEAR();
 
-            log.writeLog("Test: Read/Write Word");
+            Logger.Instance.writeLog("Test: Read/Write Word");
             uint intRes = tram.ReadWord(0);
             Debug.Assert(intRes == 0);
             tram.WriteWord(0, 0xabcdef);
@@ -99,7 +98,7 @@ namespace GDBStub
 
             tram.CLEAR();
 
-            log.writeLog("Test: Set/Test Flag");
+            Logger.Instance.writeLog("Test: Set/Test Flag");
             bool flagRes = tram.TestFlag(0, 4);
             Debug.Assert(flagRes == false);
             tram.SetFlag(0, 4, true);
@@ -108,8 +107,8 @@ namespace GDBStub
             flagRes = tram.TestFlag(0, 3);
             Debug.Assert(flagRes == false);
 
-            log.writeLog("Test: All Ram Tests passed\n");
-            log.closeTrace();
+            Logger.Instance.writeLog("Test: All Ram Tests passed\n");
+            Logger.Instance.closeTrace();
             tram.CLEAR();
 
         }

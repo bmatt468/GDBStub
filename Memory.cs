@@ -82,9 +82,9 @@ namespace GDBStub
             if (bit >= 0 && bit < 32)
             {
                 uint word = ReadWord(addr);
-                string binary = Convert.ToString(word, 2);
-                binary = binary.PadLeft(32, '0');
-                if (binary[bit] == '1')
+                //string binary = Convert.ToString(word, 2);
+                //binary = binary.PadLeft(32, '0');
+                if (((word >> bit) & 0x001) == 1 )
                 {
                     return true;
                 }

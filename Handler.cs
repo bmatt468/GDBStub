@@ -234,7 +234,7 @@ namespace GDBStub
                             break;
 
                         case 'M':
-                            // LOAD AT MEMORY COMMAND
+                            // WRITE AT MEMORY COMMAND
                             Console.WriteLine("Load at mem");
                             Console.WriteLine(cmd);
                             break;

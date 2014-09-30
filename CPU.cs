@@ -35,18 +35,20 @@ namespace GDBStub
 
 
         //fetches data from RAM 
-        public uint fetch()
+        public Memory fetch()
         {
+            Memory cmd = new Memory(4);
+            cmd.WriteWord(0, RAM.ReadWord(reg[15].ReadWord(0)));
 
-            return RAM.ReadWord(reg[15].ReadWord(0)); 
+            return cmd;
            
 
         }
 
         //decodes the int into a command.  like mov r0, r1
-        public instruction decode(uint data)
+        public Instruction decode(Memory data)
         {
-            instruction output = new instruction(data);
+            Instruction output = new Instruction(data);
 
 
             
@@ -54,7 +56,7 @@ namespace GDBStub
         }
 
         //executes the actual data by movine registers and stuff
-        public void execute(instruction command)
+        public void execute(Instruction command)
         {
 
         }

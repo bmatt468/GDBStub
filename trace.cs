@@ -15,15 +15,28 @@ namespace GDBStub
 
         //CPU instantiation
 
-        public Logger()
-            {
-                //this.openTrace();
-                //this.log = new StreamWriter("log.txt");
-            }
 
 //Trace Functions
-        //returns teh status fo trace
-        public bool getTraceStatus(){return trace_is_open;}
+        private static Logger instance;
+
+        private Logger() 
+        {
+            toggleTrace();
+        }
+
+        
+        public static Logger Instance{
+            get {
+                if (instance == null){
+                    instance = new Logger();
+                }
+            return instance;
+            }
+        }
+
+
+        //returns the status fo trace
+        public bool getTraceStatus() { return trace_is_open; }
 
         //switches trace from on->off or off->on
         public void toggleTrace()
@@ -58,6 +71,7 @@ namespace GDBStub
         //Opens trace (also clears the file)
         public void openTrace()
         {
+            closeTrace();
             this.trace = new StreamWriter("trace.log");
             this.trace_is_open = true;
         }
@@ -100,6 +114,7 @@ namespace GDBStub
 //Log functions
         public void clearLog()
         {
+            log.Close();
             log = new StreamWriter("log.txt");
             log.Close();
         }
@@ -107,9 +122,16 @@ namespace GDBStub
         //opens the file for writing. writes to it, and closes.
         internal void writeLog(string p)
         {
-            log = new StreamWriter("log.txt", true);
-            log.WriteLine(p);
-            log.Close();
+            try
+            {
+                log = new StreamWriter("log.txt", true);
+                log.WriteLine(p);
+                
+            }
+            catch { }
         }
+
     }
+
 }
+
