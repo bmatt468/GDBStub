@@ -33,6 +33,7 @@ namespace GDBStub
         Memory RAM;
         CPU cpu;
         Thread programThread;
+        private Object thisLock = new Object();
 
         private static Computer instance;
 
@@ -417,30 +418,33 @@ namespace GDBStub
         private void go()
         {
          //mutex lock
-            do
-            {
-                //fetch, decode, execute commands here
-                Memory rawInstruction = cpu.fetch();
-                //break if we fetched a zero!
-                if (rawInstruction.ReadWord(0) != 0 && !isBreakPoint(rawInstruction)) {
-
-                    //decode the uint!
-                    Instruction cookedInstruction = cpu.decode(rawInstruction);
-
-                    //exeucte the decoded Command!!
-                    cpu.execute(cookedInstruction);
-
-                    step_number++;
-                    incrementPC();
-                }
-                else
+            lock(thisLock){
+                do
                 {
-                    is_running = false;
-                }
-                //write to the trace log...
-                Logger.Instance.writeTrace(this);
+                    //fetch, decode, execute commands here
+                    Memory rawInstruction = cpu.fetch();
+                    //break if we fetched a zero!
+                    if (rawInstruction.ReadWord(0) != 0 && !isBreakPoint(rawInstruction)) {
+
+                        //decode the uint!
+                        Instruction cookedInstruction = cpu.decode(rawInstruction);
+
+                        //exeucte the decoded Command!!
+                        cpu.execute(cookedInstruction);
+
+                        step_number++;
+                        incrementPC();
+                    }
+                    else
+                    {
+                        is_running = false;
+                    }
+                    //write to the trace log...
+                    Logger.Instance.writeTrace(this);
                     
-            } while (is_running);
+                } while (is_running);
+
+            }
 
             //mutex unlock
 
