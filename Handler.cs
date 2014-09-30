@@ -22,7 +22,7 @@ namespace GDBStub
                 IPAddress[] ips = Dns.GetHostAddresses("localhost");
                 IPAddress localhost = ips[0];
                 //for daniel
-                localhost = ips[1];
+                //localhost = ips[1];
 
                 // create new socket on the specified port
                 TcpListener t = new TcpListener(localhost, portNo);
@@ -130,76 +130,76 @@ namespace GDBStub
                 // server responds with packetsize (in hex)
                 // for testing purposes the respone is 0x79 (15 32-bit registers 
                 // [requiring 8 bits ea.] + 1 extra bit)
-                case "qSupported:qRelocInsn+":
+                /*case "qSupported:qRelocInsn+":
                     this.Respond("PacketSize=79", ns);
-                    break;
+                    break;*/
 
                 // phase of handshake
                 // client informs server about threads
                 // server responds with acknowledgement (OK)
-                case "Hg0":
+                /*case "Hg0":
                     this.Respond("OK", ns);
-                    break;
+                    break;*/
 
                 // phase of handshake
                 // client asks why thread halted
                 // server responds with reason
                 // for testing purposes the respone S05 (TRAP Exception)
-                case "?":
+                /*case "?":
                     this.Respond("S05", ns);
-                    break;
+                    break;*/
 
                 // phase of handshake
                 // client sets thread
                 // server responds with OK
-                case "Hc-1":
+                /*case "Hc-1":
                     this.Respond("OK", ns);
-                    break;
+                    break;*/
 
                 // phase of handshake
                 // client asks for thread ID
                 // server responds with thread ID
                 // for testing purposes the response is QC0 
-                case "qC":
+                /*case "qC":
                     this.Respond("QC0", ns);
-                    break;
+                    break;*/
 
                 // phase of handshake
                 // client asks if new thread was created
                 // server responds with whether process is new or existing
                 // for testing purposes the response is 0 (new process) 
-                case "qAttached":
+                /*case "qAttached":
                     this.Respond("0", ns);
-                    break;
-
+                    break;*/
+                
                 // phase of handshake
                 // client asks for state of registers
                 // server responds with register state
                 // format for response is XX..., where XX is the byte representation of the register
-                // for testing purposes the response is all 0s (empty registers) 
-                
+                // for testing purposes the response is all 0s (empty registers)                 
                 // computer.dumpRegisters();
-                case "g":
+                /*case "g":
 
                     // byte[] of the reg data. will be 64 bytes
                     //Computer.Instance.dumpRegisters();
                     this.Respond(byteArrayToString(Computer.Instance.dumpRegisters(), 64), ns);
-                    break;
+                    break;*/
+                
 
                 // client asks for state of specific register
                 // server responds with register state
                 // format for response is XX, where XX... is the byte representation of the register
                 // for testing purposes the response is all 0s (empty) 
-                case "pf":
+                /*case "pf":
 
                     // byte[] of one register, will be 4 bytes
                     this.Respond(byteArrayToString(Computer.Instance.dumpRegister(15), 4), ns);
-                    break;
+                    break;*/
 
                 // client asks stub if there is a trace experiment running
                 // server respondss with status
                 // for test purposes the response it T0 (not running)
-                case "qTStatus":
+                /*case "qTStatus":
                     //returns true or false based ont he tracer.
                     //Computer.Instance.getTraceStatus();
                     this.Respond("T0", ns);
@@ -207,13 +207,55 @@ namespace GDBStub
 
                 case "qTfV":
                     this.Respond("", ns);
-                    break;
+                    break;*/
                     
                 default:
                     // handle single character commands
                     char c = cmd[0];
                     switch (c)
                     {
+                        // phase of handshake
+                        // client asks for state of registers
+                        // server responds with register state
+                        // format for response is XX..., where XX is the byte representation of the register
+                        // for testing purposes the response is all 0s (empty registers)                 
+                        // computer.dumpRegisters();
+                        case 'g':
+
+                            // byte[] of the reg data. will be 64 bytes
+                            //Computer.Instance.dumpRegisters();
+                            this.Respond(byteArrayToString(Computer.Instance.dumpRegisters(), 64), ns);
+                            break;
+                        
+                        case 'G':
+                            // WRITE GENERAL MEMORY COMMAND
+                            Console.WriteLine("General Mem");
+                            Console.WriteLine(cmd);
+                            break;
+
+                        case 'H':
+                            if (cmd == "Hc-1") 
+                            { 
+                                // phase of handshake
+                                // client sets thread
+                                // server responds with OK                
+                                this.Respond("OK", ns);
+                            }
+                            else if (cmd == "Hg0") 
+                            { 
+                                // phase of handshake
+                                // client informs server about threads
+                                // server responds with acknowledgement (OK)                
+                                this.Respond("OK", ns);                   
+                            }
+                            break;
+                        
+                        case 'k':
+                            // kill client command
+                            // done automatically but looking for clean method
+                            Console.WriteLine("Kill");
+                            break;
+
                         // client asks for the state of memory
                         // format of command is 'mAddr,length'
                         // NOTE** info will come in in HEX
@@ -224,12 +266,12 @@ namespace GDBStub
                             string[] addrAndLength = cmd.Split(',');
 
                             // get value 
-                            uint addr = Convert.ToUInt32(addrAndLength[0],16);
-                            int length = Convert.ToInt32(addrAndLength[1],16);
-                            
+                            uint addr = Convert.ToUInt32(addrAndLength[0], 16);
+                            int length = Convert.ToInt32(addrAndLength[1], 16);
+
                             // returns a byte[] of the RAM from starting address for length bytes
                             // make response
-                            this.Respond( byteArrayToString(Computer.Instance.dumpRAM(addr, length), length), ns);
+                            this.Respond(byteArrayToString(Computer.Instance.dumpRAM(addr, length), length), ns);
 
                             break;
 
@@ -239,21 +281,10 @@ namespace GDBStub
                             Console.WriteLine(cmd);
                             break;
 
-                        case 'G':
-                            // WRITE GENERAL MEMORY COMMAND
-                            Console.WriteLine("General Mem");
-                            Console.WriteLine(cmd);
-                            break;
-
-                        case 'k':
-                            // kill client command
-                            // done automatically but looking for clean method
-                            Console.WriteLine("Kill");
-                            break;
-
                         case 'p':
                             // READ REGISTER COMMAND
                             // defaults to dump reg #15
+                            int regval = int.Parse(cmd.Substring(1),System.Globalization.NumberStyles.HexNumber);                            
                             this.Respond(byteArrayToString(Computer.Instance.dumpRegister(15),4), ns);
                             Console.WriteLine("Print Register");
                             Console.WriteLine(cmd);
@@ -268,11 +299,69 @@ namespace GDBStub
                             Console.WriteLine(cmd);
                             break;
 
+                        case 'q':
+                            // ask about first client side tracepoint variable                           
+                            if (cmd == "qTfP")
+                            {
+                                this.Respond("", ns);
+                            }
+                            // ask about more tracepoint variables
+                            else if (cmd == "qTsP")
+                            {
+                                this.Respond("", ns);
+                            }
+                            else if (cmd == "qAttached")
+                            {
+                                // phase of handshake
+                                // client asks if new thread was created
+                                // server responds with whether process is new or existing
+                                // for testing purposes the response is 0 (new process)                 
+                                this.Respond("0", ns);                   
+                            }
+                            else if (cmd == "qTStatus")
+                            {
+                                // client asks stub if there is a trace experiment running
+                                // server respondss with status
+                                // for test purposes the response it T0 (not running)               
+                                //returns true or false based ont he tracer.
+                                //Computer.Instance.getTraceStatus();
+                                this.Respond("T0", ns);                   
+                            }
+                            else if (cmd == "qTfV") 
+                            {
+                                this.Respond("", ns);
+                            }
+                            else if (cmd == "qC")
+                            {
+                                // phase of handshake
+                                // client asks for thread ID
+                                // server responds with thread ID
+                                // for testing purposes the response is QC0                
+                                this.Respond("QC0", ns);                    
+                            }
+                            else if (cmd == "qSupported:qRelocInsn+")
+                            {
+                                // initial phase of handshake
+                                // server responds with packetsize (in hex)
+                                // for testing purposes the respone is 0x79 (15 32-bit registers 
+                                // [requiring 8 bits ea.] + 1 extra bit)                                
+                                this.Respond("PacketSize=79", ns);
+                            }
+
+                            break;
+
                         case 's':
                             // SINGLE STEP COMMAND
                             // Computer.Instance.Step();
                             Console.WriteLine("Step");
                             Console.WriteLine(cmd);
+                            break;
+
+                        case 'v':
+                            if (cmd.StartsWith("vRun"))
+                            {
+                                // RUN COMMAND
+                            }
                             break;
                         
                         case 'X':
@@ -295,16 +384,18 @@ namespace GDBStub
                             Console.WriteLine(cmd);
                             break;
 
+                        // phase of handshake
+                        // client asks why thread halted
+                        // server responds with reason
+                        // for testing purposes the respone S05 (TRAP Exception)
+                        case '?':
+                            this.Respond("S05", ns);
+                            break;
+
                         default:
                             this.Respond("", ns);
                             break;
-                    }
-
-                    // handle word commands
-                    if (cmd.StartsWith("vRun"))
-                    {
-                        // RUN COMMAND
-                    }
+                    }                    
                     break;                   
             }
         }
