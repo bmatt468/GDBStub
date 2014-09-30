@@ -127,8 +127,26 @@ namespace GDBStub
 //-------------- End Getters//
 
 //------------------- Setters
-        private void toggleTrace() { Logger.Instance.toggleTrace(); }
 
+        /// <summary>
+        /// writes data to a specified register
+        /// </summary>
+        /// <param name="r">The # of the Register</param>
+        /// <param name="x">The amount to be written to a register.</param>
+        private void writeRegister(uint r, uint x)
+        {
+            if (r < 16)
+                reg[r].WriteWord(0, x);
+        }
+
+        private void writeRAM(uint addr, byte[] x ) 
+        {
+
+            for (int i = 0; addr < addr + x.Length; ++addr, ++i)
+            {
+                RAM.WriteByte(addr, x[i]);
+            }
+        }
 
         /// <summary>
         /// Clears the data from all of 
@@ -142,6 +160,7 @@ namespace GDBStub
             }
         }
 
+//-------End Setters------
 //------- ELF code
         //reads the ELF
         /* Error codes:
@@ -238,11 +257,7 @@ namespace GDBStub
 
 //End ELF code
 
-//-------End Setters------
 
-
-        // Run, Step, Stop/Break, and Reset
- 
 
 
  //---------------Actions

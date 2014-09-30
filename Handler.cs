@@ -253,6 +253,7 @@ namespace GDBStub
 
                         case 'p':
                             // READ REGISTER COMMAND
+                            // defaults to dump reg #15
                             this.Respond(byteArrayToString(Computer.Instance.dumpRegister(15),4), ns);
                             Console.WriteLine("Print Register");
                             Console.WriteLine(cmd);
@@ -261,19 +262,22 @@ namespace GDBStub
                         case 'P':
                             // WRITE REGISTER COMMAND
                             // SYNTAX: n...=r...
+                            // Computer.Instance.writeRegister(reg#, ammount);
+
                             Console.WriteLine("Write Register");
                             Console.WriteLine(cmd);
                             break;
 
                         case 's':
                             // SINGLE STEP COMMAND
-
+                            // Computer.Instance.Step();
                             Console.WriteLine("Step");
                             Console.WriteLine(cmd);
                             break;
                         
                         case 'X':
                             // WRITE DATA COMMAND
+                            // Computer.Instance.writeRAM(addr, byte[]);
                             Console.WriteLine("Write Data Command");
                             Console.WriteLine(cmd);
                             break;
@@ -286,6 +290,7 @@ namespace GDBStub
 
                         case 'Z':
                             // SET BREAKPOINT COMMAND
+                            // Computer.Instance.setBreakPoint(
                             Console.WriteLine("Set BreakPoint");
                             Console.WriteLine(cmd);
                             break;
