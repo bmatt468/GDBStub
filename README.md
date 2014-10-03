@@ -10,7 +10,7 @@ Requirements
 ·         Get/set general purpose registers [C] -- Daniel (FINISHED)
 ·         Get/set regions of memory [C] -- Daniel (FINISHED)
 ·         Single step/continue (execution faked at first, of course) [C] -- Benjamin /Daniel(FINISHED)
-·         Load new binary image [B-level] -- ? Don't know what this is. please exp'
+·         Load new binary image [B-level] -- 
 				gdb will use mov commands instead if you reply with an empty packet.
 			
 ·         Set/clear software breakpoints [A-level] -- Daniel(FINISHED) /Benjamin

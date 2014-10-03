@@ -70,7 +70,7 @@ namespace GDBStub
         }
 
 
-
+        //do you really want the entirety of RAM?
         public byte[] getArray()
         {
             return theArray;
@@ -99,24 +99,24 @@ namespace GDBStub
 
         public void SetFlag(UInt32 addr, byte bit, bool flag)
         {
-            if (bit >= 0 && bit < 32)
+            uint power = 0;
+            uint num = 1;
+            for (; power < bit; ++power){ num *= 2;}    //get's power to one less the bit.
+            string bin = Convert.ToString(num, 2); //check the number.
+
+            uint word = ReadWord(addr);
+            string binWord = Convert.ToString(word, 2); //check the number.
+
+            if (flag)
+                word |= num;
+            else if (TestFlag(addr, bit)) //if it's a 1 change it, otherwise it's already a 0.
             {
-                uint word = ReadWord(addr);
-                string binary = Convert.ToString(word, 2);
-                binary = binary.PadLeft(32, '0');
-                char[] binA = binary.ToCharArray();
-                if (flag)
-                {
-                    binA[bit] = '1';
-                }
-                else
-                {
-                    binA[bit] = '0';
-                }
-                binary = new string(binA);
-                word = Convert.ToUInt32(binary, 2);
-                WriteWord(addr, word);
+                word ^= num;
             }
+
+            WriteWord(addr, word );
+         
+
         }
 
         public uint ReadWord(UInt32 addr)

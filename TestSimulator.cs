@@ -99,12 +99,28 @@ namespace GDBStub
             tram.CLEAR();
 
             Logger.Instance.writeLog("Test: Set/Test Flag");
+
             bool flagRes = tram.TestFlag(0, 4);
             Debug.Assert(flagRes == false);
+
+            //set a false flag true
             tram.SetFlag(0, 4, true);
             flagRes = tram.TestFlag(0, 4);
             Debug.Assert(flagRes == true);
-            flagRes = tram.TestFlag(0, 3);
+
+            // true >> true
+            tram.SetFlag(0, 4, true);
+            flagRes = tram.TestFlag(0, 4);
+            Debug.Assert(flagRes == true);
+
+            // true >> false
+            tram.SetFlag(0, 4, false);
+            flagRes = tram.TestFlag(0, 4);
+            Debug.Assert(flagRes == false);
+
+            // false >> false
+            tram.SetFlag(0, 4, false);
+            flagRes = tram.TestFlag(0, 4);
             Debug.Assert(flagRes == false);
 
             Logger.Instance.writeLog("Test: All Ram Tests passed\n");

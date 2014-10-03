@@ -22,7 +22,7 @@ namespace GDBStub
                 IPAddress[] ips = Dns.GetHostAddresses("localhost");
                 IPAddress localhost = ips[0];
                 //for daniel
-                //localhost = ips[1];
+                localhost = ips[1];
 
                 // create new socket on the specified port
                 TcpListener t = new TcpListener(localhost, portNo);
