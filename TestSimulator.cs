@@ -20,7 +20,7 @@ namespace GDBStub
             ELFReader e = new ELFReader();
             Memory ram = new Memory(32768);
             Computer comp = new Computer();
-
+            Logger.Instance.closeTrace();
             Logger.Instance.writeLog("Test: Starting Simulator unit tests");
 
             Logger.Instance.writeLog("Test: Testing Hash of test1.exe");
@@ -54,7 +54,7 @@ namespace GDBStub
             Debug.Assert(hash.ToUpper() == resultHash);
             Logger.Instance.writeLog("Test: All Hashes correct\n");
 
-            Logger.Instance.toggleTrace();
+            //Logger.Instance.toggleTrace();
             comp.reset();
 
         }
@@ -70,6 +70,7 @@ namespace GDBStub
             //append
             Logger.Instance.writeLog("Test: Starting RAM unit tests");
             Memory tram = new Memory(32768);
+                        Logger.Instance.closeTrace();
 
             Logger.Instance.writeLog("Test: Read/Write Byte");
             byte byteRes = tram.ReadByte(0);

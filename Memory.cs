@@ -82,9 +82,8 @@ namespace GDBStub
             if (bit >= 0 && bit < 32)
             {
                 uint word = ReadWord(addr);
-                //string binary = Convert.ToString(word, 2);
-                //binary = binary.PadLeft(32, '0');
-                if (((word >> bit) & 0x001) == 1 )
+                // Shift it all the way to the rightwe only care about the LSB
+                if (((word >> bit) & 0x001) == 1 ) 
                 {
                     return true;
                 }
@@ -93,20 +92,17 @@ namespace GDBStub
                     return false;
                 }
             }
+            //if invalid input, return false
             return false;
 
-        }
+        }//TestFlag
 
         public void SetFlag(UInt32 addr, byte bit, bool flag)
         {
             uint power = 0;
             uint num = 1;
             for (; power < bit; ++power){ num *= 2;}    //get's power to one less the bit.
-            string bin = Convert.ToString(num, 2); //check the number.
-
             uint word = ReadWord(addr);
-            string binWord = Convert.ToString(word, 2); //check the number.
-
             if (flag)
                 word |= num;
             else if (TestFlag(addr, bit)) //if it's a 1 change it, otherwise it's already a 0.
@@ -114,10 +110,8 @@ namespace GDBStub
                 word ^= num;
             }
 
-            WriteWord(addr, word );
-         
-
-        }
+            WriteWord(addr, word );//write it back to memory
+        }//setFlag
 
         public uint ReadWord(UInt32 addr)
         {

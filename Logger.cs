@@ -77,9 +77,12 @@ namespace GDBStub
         {
             lock (thisLock)
             {
-                closeTrace();
-                this.trace = new StreamWriter("trace.log");
-                this.trace_is_open = true;
+                if (!trace_is_open) //checks to see if it's not opened
+                {
+                    this.trace = new StreamWriter("trace.log");
+                    this.trace_is_open = true;
+                }
+               // closeTrace();
             }
         }
 

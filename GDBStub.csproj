@@ -75,7 +75,7 @@
     <Compile Include="Register.cs" />
     <Compile Include="ShifterOperand.cs" />
     <Compile Include="TestSimulator.cs" />
-    <Compile Include="trace.cs" />
+    <Compile Include="Logger.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include=".git\objects\info\" />

@@ -49,7 +49,7 @@ namespace GDBStub
         public void getError(string inpu)
         {
             string output = inpu;
-            output += "\nValid input is: armsim --load elf-file [ --mem memory-size ] [ --test]";
+            output += "\nValid input is: armsim [--load elf-file] [ --mem memory-size ] [ --test] [--debug]";
             Console.WriteLine(output);
         }
 
@@ -77,7 +77,7 @@ namespace GDBStub
 
         public bool parseArgs(string[] inpu)
         {
-            file = null;
+            file = "";
             test = false;
             valid = true;
             memSize = 32768;
@@ -112,11 +112,6 @@ namespace GDBStub
                         valid = false;
                         break;
                 }
-            }
-            if (file == null)
-            {
-                valid = false;
-                getError("No file specified.");
             }
             return valid;
         }

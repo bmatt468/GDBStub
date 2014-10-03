@@ -55,19 +55,24 @@ namespace GDBStub
                     TestRam.RunTests();
                     TestSimulator.RunTests();
                     Console.WriteLine("All tests passed see log.txt for details");
+                   
 
                 }
                     if (Option.Instance.getFile() != "")
                     {
                         //specified through command line, load the file
+                        Logger.Instance.writeLog("File: Loading");
                         Computer.Instance.readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
+                        Console.WriteLine("File Loaded");
+
+                        Logger.Instance.writeLog("File: Loaded");
                     }
             //THis will be replaces later
             //with information of just running
                     Console.WriteLine("\n");
                     Console.Write("Please input a command: ");
                     string input = Console.ReadLine();
-
+                    Logger.Instance.openTrace();
                     while (input != "q" && input != "")
                     {
                         Computer.Instance.command(input);

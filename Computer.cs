@@ -239,9 +239,9 @@ namespace GDBStub
 
 
                     string ramOutput = RAM.getAtAddress((uint)e.elfphs[0].p_vaddr, 8);
-
+                    Logger.Instance.writeLog("File: Loaded");
                     Logger.Instance.writeLog(ramOutput);
-                    Console.WriteLine(ramOutput);
+                    //Console.WriteLine(ramOutput);
                     output = 0;
                 }
                 else //file to large
@@ -330,7 +330,7 @@ namespace GDBStub
             readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
 
             step_number = 0;
-            Logger.Instance.writeLog("Reset");
+            Logger.Instance.writeLog("*****\nReset\n*****\n");
         }
 
         /*
