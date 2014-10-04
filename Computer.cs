@@ -480,24 +480,17 @@ namespace GDBStub
                             {
                                 //breakpoint
                                 is_running = false;
-                                //SO5
-                                status breakPointStat = new status();
-                                breakPointStat.statchar = 'S';
-                                breakPointStat.statval = "05";
-                                compStatus = breakPointStat;
-
                             }
-
                         }else
                         {
                             //finished
                             is_running = false;
                             //W00
                             Logger.Instance.writeLog(reg[15].getRegString());
-                            status stoppedStatus = new status();
-                            stoppedStatus.statchar = 'W';
-                            stoppedStatus.statval = "00";
-                            compStatus = stoppedStatus;
+                            status endedStatus = new status();
+                            endedStatus.statchar = 'W';
+                            endedStatus.statval = "00";
+                            compStatus = endedStatus;
                             this.CLEAR();
                         }
 
@@ -505,6 +498,11 @@ namespace GDBStub
                     Logger.Instance.writeTrace(this);
                     
                 } while (is_running);
+                //SO5
+                status stoppedStatus = new status();
+                stoppedStatus.statchar = 'S';
+                stoppedStatus.statval = "05";
+                compStatus = stoppedStatus;
 
             }
 
