@@ -209,9 +209,9 @@ namespace GDBStub
                     // Computer.Instance.writeRegister(reg#, ammount);
                     char[] PDelims = {'='};
                     string[] Psa = cmd.Substring(1).Split(PDelims);
-                    byte[] Pba = FixThatBugWeFound(Psa[1], 8);
+                    byte[] Pba = FixThatBugWeFound(Psa[1], 4);
                     Computer.Instance.writeRegister(Convert.ToUInt32(Psa[0], 16), Pba);
-                    Console.WriteLine(cmd);
+                    this.Respond("OK", ns);
                     break;
 
                 case 'q':
