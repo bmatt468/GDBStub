@@ -474,10 +474,10 @@ namespace GDBStub
                                 //breakpoint
                                 is_running = false;
                                 //SO5
-                                status threadStat;
-                                threadStat.statchar = 'S';
-                                threadStat.statval = 05;
-                                compStatus = threadStat;
+                                status breakPointStat = new status();
+                                breakPointStat.statchar = 'S';
+                                breakPointStat.statval = 05;
+                                compStatus = breakPointStat;
 
                             }
 
@@ -486,10 +486,10 @@ namespace GDBStub
                             //finished
                             is_running = false;
                             //W00
-                            status threadStat;
-                            threadStat.statchar = 'W';
-                            threadStat.statval = 00;
-                            compStatus = threadStat;
+                            status stoppedStatus = new status();
+                            stoppedStatus.statchar = 'W';
+                            stoppedStatus.statval = 00;
+                            compStatus = stoppedStatus;
                         }
 
                     //write to the trace log...
