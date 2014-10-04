@@ -136,9 +136,10 @@ namespace GDBStub
         {
            lock(thisLock)
            {
-               //if(log == null)
+                //if(log == null)
                 log = new StreamWriter("log.txt", true);
-                log.WriteLine(p);
+                DateTime now = DateTime.Now;
+                log.WriteLine(now.ToString() + " | " + p);
                 log.Close();
             }
         }//write Log

@@ -246,7 +246,7 @@ namespace GDBStub
                     {
                         this.Respond("", ns);
                     }
-                    else if (cmd == "qC")
+                    else if (cmd == "qC)")
                     {
                         // phase of handshake
                         // client asks for thread ID
