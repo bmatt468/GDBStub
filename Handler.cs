@@ -187,21 +187,11 @@ namespace GDBStub
 
                 case 'M':
                     // WRITE AT MEMORY COMMAND
-                    char[] ca = {',', ':'};
-                    string[] sa = cmd.Substring(1).Split(ca);
-                    byte[] ba = new byte[Convert.ToInt32(sa[1])];
-                    string bigLongUselessString = sa[2];
-                    // build byte array
-                    for (int i = 0; i < ba.Length; ++i)
-                    {
-                        string toBeHexified = bigLongUselessString.Substring(0, 2);
-                        byte b = Convert.ToByte(toBeHexified, 16);
-                        ba[i] = b;
-                        bigLongUselessString = bigLongUselessString.Remove(0, 2);
-                    }                       
-                        Computer.Instance.writeRAM((uint)Convert.ToInt32(sa[0],16), ba);
-                        this.Respond("OK", ns);
-
+                    char[] MDelim = {',', ':'};
+                    string[] Msa = cmd.Substring(1).Split(MDelim);
+                    byte[] ba = FixThatBugWeFound(Msa[2], Convert.ToInt32(Msa[1]));                                          
+                    Computer.Instance.writeRAM((uint)Convert.ToInt32(Msa[0],16), ba);
+                    this.Respond("OK", ns);
                     break;
 
                 case 'p':
@@ -217,8 +207,10 @@ namespace GDBStub
                     // WRITE REGISTER COMMAND
                     // SYNTAX: n...=r...
                     // Computer.Instance.writeRegister(reg#, ammount);
-
-                    Console.WriteLine("Write Register");
+                    char[] PDelims = {'='};
+                    string[] Psa = cmd.Substring(1).Split(PDelims);
+                    byte[] Pba = FixThatBugWeFound(Psa[1], 8);
+                    Computer.Instance.writeRegister(Convert.ToUInt32(Psa[0], 16), Pba);
                     Console.WriteLine(cmd);
                     break;
 
@@ -323,6 +315,24 @@ namespace GDBStub
                     
         }
 
+        /// <summary>
+        /// aka StringToByteArray
+        /// </summary>
+        /// <returns>byte[]</returns>
+        public byte[] FixThatBugWeFound(string str, int arrLength) {           
+            byte[] ba = new byte[arrLength];
+            // build byte array
+            for (int i = 0; i < ba.Length; ++i)
+            {
+                string toBeHexified = str.Substring(0, 2);
+                byte b = Convert.ToByte(toBeHexified, 16);
+                ba[i] = b;
+                str = str.Remove(0, 2);
+            }
+
+            return ba;
+        }
+        
         private string byteArrayToString(byte[] memory, int length)
         {
             string output = "";
