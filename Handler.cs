@@ -373,7 +373,6 @@ namespace GDBStub
             for (int i = 0; i < length; ++i)
             {
                 output += Convert.ToString(memory[i], 16).PadLeft(2, '0');
-
             }
             return output;
         }

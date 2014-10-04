@@ -8,6 +8,11 @@ using System.Security.Cryptography;
 using System.IO;
 using System.Runtime.InteropServices;
 
+
+
+//I guess this doesn't work..... worth a try
+//using School.BJU.Class.CPS310.MicroProcessor.Version.100
+
 namespace GDBStub
 {
    
