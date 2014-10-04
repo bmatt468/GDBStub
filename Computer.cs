@@ -22,6 +22,14 @@ namespace GDBStub
      */
     class Computer
     {
+        public struct status
+        {
+            public char statchar;
+            public uint statval;
+        }
+
+        public status compStatus { get; set; }
+        
         //is running flag
         bool is_running = false;
         bool N, Z, C, F = false;

@@ -123,6 +123,19 @@ namespace GDBStub
             char c = cmd[0];
             switch (c)
             {
+                case 'c':
+                    // continue running
+                    Computer.Instance.run();
+                    while (Computer.Instance.getThreadStatus()) 
+                    {
+                        continue;
+                    }
+
+                    this.Respond(String.Format("{0}{1}",
+                        Computer.Instance.compStatus.statchar,
+                        Computer.Instance.compStatus.statval), ns);
+                    break;
+                
                 // phase of handshake
                 // client asks for state of registers
                 // server responds with register state
