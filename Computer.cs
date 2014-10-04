@@ -25,7 +25,7 @@ namespace GDBStub
         public struct status
         {
             public char statchar { get; set; }
-            public int statval { get; set; }
+            public string statval { get; set; }
 
         }
         public status compStatus { get; set; }
@@ -476,7 +476,7 @@ namespace GDBStub
                                 //SO5
                                 status breakPointStat = new status();
                                 breakPointStat.statchar = 'S';
-                                breakPointStat.statval = 05;
+                                breakPointStat.statval = "05";
                                 compStatus = breakPointStat;
 
                             }
@@ -488,7 +488,7 @@ namespace GDBStub
                             //W00
                             status stoppedStatus = new status();
                             stoppedStatus.statchar = 'W';
-                            stoppedStatus.statval = 00;
+                            stoppedStatus.statval = "00";
                             compStatus = stoppedStatus;
                         }
 
