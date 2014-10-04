@@ -88,6 +88,7 @@ namespace GDBStub
         // returns the tracing data for gdb
         public bool getTraceStatus(){ return Logger.Instance.getTraceStatus(); }
 
+        public bool getThreadStatus() { return programThread.IsAlive; }
 
 //----------Dumpers Kind of like getters--------
 
@@ -391,12 +392,7 @@ namespace GDBStub
             {
                 //step logic
 
-                // Start the thread
-                //programThread = new Thread(new ThreadStart(this.go));
                 this.go();
-                //programThread.Start();
-                //waits for thread to get moving.
-                //while (!programThread.IsAlive) ;
 
                 Logger.Instance.writeLog("Step");
             }
