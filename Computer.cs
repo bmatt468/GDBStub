@@ -24,11 +24,12 @@ namespace GDBStub
     {
         public struct status
         {
-            public char statchar;
-            public uint statval;
-        }
+            public char statchar { get; set; }
+            public int statval { get; set; }
 
+        }
         public status compStatus { get; set; }
+
         
         //is running flag
         bool is_running = false;
@@ -455,21 +456,42 @@ namespace GDBStub
                     //fetch, decode, execute commands here
                     Memory rawInstruction = cpu.fetch();
                     //break if we fetched a zero!
-                    if (rawInstruction.ReadWord(0) != 0 && !isBreakPoint(rawInstruction)) {
+                    if (rawInstruction.ReadWord(0) != 0)
+                        {
+                            if (!isBreakPoint(rawInstruction))
+                            {
+                                //decode the uint!
+                                Instruction cookedInstruction = cpu.decode(rawInstruction);
 
-                        //decode the uint!
-                        Instruction cookedInstruction = cpu.decode(rawInstruction);
+                                //exeucte the decoded Command!!
+                                cpu.execute(cookedInstruction);
 
-                        //exeucte the decoded Command!!
-                        cpu.execute(cookedInstruction);
+                                step_number++;
+                                incrementPC();
+                            }
+                            else
+                            {
+                                //breakpoint
+                                is_running = false;
+                                //SO5
+                                status threadStat;
+                                threadStat.statchar = 'S';
+                                threadStat.statval = 05;
+                                compStatus = threadStat;
 
-                        step_number++;
-                        incrementPC();
-                    }
-                    else
-                    {
-                        is_running = false;
-                    }
+                            }
+
+                        }else
+                        {
+                            //finished
+                            is_running = false;
+                            //W00
+                            status threadStat;
+                            threadStat.statchar = 'W';
+                            threadStat.statval = 00;
+                            compStatus = threadStat;
+                        }
+
                     //write to the trace log...
                     Logger.Instance.writeTrace(this);
                     
