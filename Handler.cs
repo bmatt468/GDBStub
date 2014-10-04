@@ -157,6 +157,12 @@ namespace GDBStub
                         // server responds with acknowledgement (OK)                
                         this.Respond("OK", ns);                   
                     }
+                    else if (cmd == "Hc0")
+                    {
+                        // client informs server about thread used
+                        // server responds with acknowledgement (OK)                
+                        this.Respond("OK", ns);
+                    }
                     break;
                         
                 case 'k':
@@ -267,15 +273,18 @@ namespace GDBStub
 
                 case 's':
                     // SINGLE STEP COMMAND
-                    // Computer.Instance.Step();
-                    Console.WriteLine("Step");
-                    Console.WriteLine(cmd);
+                    Computer.Instance.step();
+                    this.Respond("S00",ns);
                     break;
 
                 case 'v':
                     if (cmd.StartsWith("vRun"))
                     {
                         // RUN COMMAND
+                    }
+                    if (cmd.StartsWith("vCont"))
+                    {
+                        this.Respond("",ns);
                     }
                     break;
                         
