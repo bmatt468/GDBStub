@@ -295,7 +295,10 @@ namespace GDBStub
                 case 's':
                     // SINGLE STEP COMMAND
                     Computer.Instance.step();
-                    this.Respond("S00",ns);
+                    //this.Respond("S00",ns);
+                    this.Respond(String.Format("{0}{1}",
+                       Computer.Instance.compStatus.statchar,
+                       Computer.Instance.compStatus.statval), ns);
                     break;
 
                 case 'v':
@@ -319,6 +322,10 @@ namespace GDBStub
 
                 case 'z':
                     // REMOVE BREAKPOINT COMMAND
+                    char[] zDelims = {','};
+                    string[] zsa = cmd.Split(zDelims);
+                    Computer.Instance.removeBreakPoint(Convert.ToUInt32(zsa[1], 16));
+                    this.Respond("OK", ns);
                     Console.WriteLine("Remove Break point");
                     Console.WriteLine(cmd);
                     break;
@@ -330,8 +337,6 @@ namespace GDBStub
                     string[] Zsa = cmd.Split(ZDelims);
                     Computer.Instance.setBreakPoint(Convert.ToUInt32(Zsa[1], 16), Convert.ToUInt16(Zsa[2], 16));
                     this.Respond("OK", ns);
-                    Console.WriteLine("Set BreakPoint");
-                    Console.WriteLine(cmd);
                     break;
 
                 // phase of handshake

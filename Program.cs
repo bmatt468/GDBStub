@@ -18,9 +18,6 @@ namespace GDBStub
    
     class Program
     {
-
-
-
         static void Main(string[] args)
         {
             if (Option.Instance.parseArgs(args))    //verify the proper command line input
