@@ -152,13 +152,19 @@ namespace GDBStub
                 reg[r].WriteWord(0, x);
         }
 
+        /// <summary>
+        /// Write a byte array to an address in memory
+        /// </summary>
+        /// <param name="addr">The address to start in memory</param>
+        /// <param name="x">The byte array to write to memory</param>
         public void writeRAM(uint addr, byte[] x ) 
         {
             uint baseAddr = addr;
-            for (int i = 0; addr < baseAddr + x.Length; ++addr, ++i)
+            for (int i = 0; i < x.Length; ++addr, ++i)
             {
                 RAM.WriteByte(addr, x[i]);
             }
+
         }
 
         /// <summary>
@@ -180,32 +186,46 @@ namespace GDBStub
         /// </summary>
         /// <param name="addr"></param>
         /// <param name="immed"></param>
-        public void makeBreakPoint(uint addr, ushort immed = 0)
+        public void setBreakPoint(uint addr, ushort immed = 0)
         {
 
             uint top12 = (uint)(immed & 0xFFF0) << 4;
             uint bot4 = (uint)immed & 0x000F;
             UInt32 breakPointValue = 0xE1200070 + top12 + bot4;
             uint saveCommand = RAM.ReadWord(addr);
-            storedCommands[addr] = saveCommand;
 
+            // Presever the command if it's not a breakpoint already
+            if ((saveCommand & 0xE1200070) != 0xE120070) 
+                storedCommands[addr] = saveCommand;
+            //Write the new breakpoint
             RAM.WriteWord(addr, breakPointValue);
 
         }
 
-        public void removeBreakPoint(uint addr)
+        /// <summary>
+        /// Removes a breakpoint at addr location.  
+        /// Returns -1 if it's not a breakpoint to remove.  
+        /// Returns 0 if all went ok.
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <returns>-1 as an error of not a breakpoint.  0 if it's ok.</returns>
+        public int removeBreakPoint(uint addr)
         {
             try
             {
                 RAM.WriteWord(addr, storedCommands[addr]);
             }
             catch 
-            { 
-            //not a breakpoint
+            {
+                //not a Breakpoint.  No breakpoint removed
+                return -1;
             }
+            return 0;
         }
 
 //-------End Setters------
+
+
 //------- ELF code
         //reads the ELF
         /* Error codes:
@@ -491,7 +511,7 @@ namespace GDBStub
                     break;
                 case "breakpoint":
                     addr = Convert.ToUInt16(command[1]);
-                    this.makeBreakPoint(addr, 0);
+                    this.setBreakPoint(addr, 0);
                     break;
                 case "rbkp":
                     addr = Convert.ToUInt16(command[1]);

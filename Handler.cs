@@ -19,10 +19,11 @@ namespace GDBStub
                 Console.WriteLine("Attempting to open port " + portNo);
                 
                 // Get the ip address of the local machine
+                
                 IPAddress[] ips = Dns.GetHostAddresses("localhost");
                 IPAddress localhost = ips[0];
                 //for daniel
-                //localhost = ips[1];
+                localhost = ips[1];
 
                 // create new socket on the specified port
                 TcpListener t = new TcpListener(localhost, portNo);
@@ -136,6 +137,8 @@ namespace GDBStub
                         
                 case 'G':
                     // WRITE GENERAL MEMORY COMMAND
+                    // Computer.Instance.writeRAM(uint addr, byte[] x ) 
+
                     Console.WriteLine("General Mem");
                     Console.WriteLine(cmd);
                     break;
@@ -196,15 +199,24 @@ namespace GDBStub
                         byte b = Convert.ToByte(toBeHexified, 16);
                         ba[i] = b;
                         bigLongUselessString = bigLongUselessString.Remove(0, 2);
-                    }                       
+                    }               
+                        // WRITE TO RAM
                         Computer.Instance.writeRAM((uint)Convert.ToInt32(sa[0]), ba);
+                    //check the log.txt
+                        // Print it out, Prove it worked! and it does
+                        Logger.Instance.writeLog(
+                            Computer.Instance.getRAM().getAtAddress(
+                                (uint)Convert.ToInt32(sa[0]) - (uint)Convert.ToInt32(sa[1]), 10));
 
+                        //tell the gdb server we got the instruction and read it.
+                        this.Respond("OK", ns);
                     break;
 
                 case 'p':
                     // READ REGISTER COMMAND
                     // defaults to dump reg #15
-                    int regval = int.Parse(cmd.Substring(1),System.Globalization.NumberStyles.HexNumber);                            
+                    int regval = int.Parse(cmd.Substring(1),System.Globalization.NumberStyles.HexNumber); 
+                    //change 15 to the register specified       
                     this.Respond(byteArrayToString(Computer.Instance.dumpRegister(15),4), ns);
                     Console.WriteLine("Print Register");
                     Console.WriteLine(cmd);
@@ -294,13 +306,14 @@ namespace GDBStub
 
                 case 'z':
                     // REMOVE BREAKPOINT COMMAND
+                    // public void removeBreakPoint(uint addr)
                     Console.WriteLine("Remove Break point");
                     Console.WriteLine(cmd);
                     break;
 
                 case 'Z':
                     // SET BREAKPOINT COMMAND
-                    // Computer.Instance.setBreakPoint(
+                    // public void setBreakPoint(uint addr, ushort immed = 0)
                     Console.WriteLine("Set BreakPoint");
                     Console.WriteLine(cmd);
                     break;
