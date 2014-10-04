@@ -197,6 +197,12 @@ namespace GDBStub
         }
 
 
+        public void CLEAR()
+        {
+            RAM.CLEAR();
+            clearRegisters();
+        }
+
         /// <summary>
         /// Takes the address and the immediate value
         /// will default to 0
@@ -456,6 +462,7 @@ namespace GDBStub
                     //fetch, decode, execute commands here
                     Memory rawInstruction = cpu.fetch();
                     //break if we fetched a zero!
+                    //will change to a finish command like .exit
                     if (rawInstruction.ReadWord(0) != 0)
                         {
                             if (!isBreakPoint(rawInstruction))
@@ -490,6 +497,7 @@ namespace GDBStub
                             stoppedStatus.statchar = 'W';
                             stoppedStatus.statval = "00";
                             compStatus = stoppedStatus;
+                            this.CLEAR();
                         }
 
                     //write to the trace log...
