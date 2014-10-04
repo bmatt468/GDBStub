@@ -392,11 +392,11 @@ namespace GDBStub
                 //step logic
 
                 // Start the thread
-                programThread = new Thread(new ThreadStart(this.go));
-
-                programThread.Start();
+                //programThread = new Thread(new ThreadStart(this.go));
+                this.go();
+                //programThread.Start();
                 //waits for thread to get moving.
-                while (!programThread.IsAlive) ;
+                //while (!programThread.IsAlive) ;
 
                 Logger.Instance.writeLog("Step");
             }
