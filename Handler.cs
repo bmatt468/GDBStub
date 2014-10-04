@@ -19,10 +19,12 @@ namespace GDBStub
                 Console.WriteLine("Attempting to open port " + portNo);
                 
                 // Get the ip address of the local machine
-                IPAddress[] ips = Dns.GetHostAddresses("localhost");
-                IPAddress localhost = ips[0];
+                //IPAddress[] ips = Dns.GetHostAddresses("localhost");
+                //IPAddress localhost = ips[0];
                 //for daniel
                 //localhost = ips[1];
+                byte[] temp = {127,0,0,1};
+                IPAddress localhost = new IPAddress(temp);
 
                 // create new socket on the specified port
                 TcpListener t = new TcpListener(localhost, portNo);
@@ -198,6 +200,7 @@ namespace GDBStub
                         bigLongUselessString = bigLongUselessString.Remove(0, 2);
                     }                       
                         Computer.Instance.writeRAM((uint)Convert.ToInt32(sa[0]), ba);
+                        this.Respond("OK", ns);
 
                     break;
 
@@ -331,25 +334,16 @@ namespace GDBStub
         }
 
         public void Respond(string response, NetworkStream ns)
-        {
-            //if (response != "")
-            //{
-                ushort chk = 0;
-                foreach (char c in response)
-                {
-                    chk += (ushort)Convert.ToInt16(c);
-                }
-                chk %= 256;
-                byte[] msg = System.Text.Encoding.UTF8.GetBytes("+$" + response + "#" + chk.ToString("x2"));
-                ns.Write(msg, 0, msg.Length);
-                Console.WriteLine(String.Format("Sent: {0}", System.Text.Encoding.UTF8.GetString(msg)));
-            //}
-            /*else
+        {            
+            ushort chk = 0;
+            foreach (char c in response)
             {
-                byte[] msg = System.Text.Encoding.UTF8.GetBytes("");
-                ns.Write(msg, 0, msg.Length);
-                Console.WriteLine(String.Format("Sent: {0}", System.Text.Encoding.UTF8.GetString(msg)));
-            }*/
+                chk += (ushort)Convert.ToInt16(c);
+            }
+            chk %= 256;
+            byte[] msg = System.Text.Encoding.UTF8.GetBytes("+$" + response + "#" + chk.ToString("x2"));
+            ns.Write(msg, 0, msg.Length);
+            Console.WriteLine(String.Format("Sent: {0}", System.Text.Encoding.UTF8.GetString(msg)));            
         }
     }
 }
