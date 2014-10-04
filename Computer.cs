@@ -493,6 +493,7 @@ namespace GDBStub
                             //finished
                             is_running = false;
                             //W00
+                            Logger.Instance.writeLog(reg[15].getRegString());
                             status stoppedStatus = new status();
                             stoppedStatus.statchar = 'W';
                             stoppedStatus.statval = "00";
