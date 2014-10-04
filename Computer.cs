@@ -145,11 +145,18 @@ namespace GDBStub
         /// writes data to a specified register
         /// </summary>
         /// <param name="r">The # of the Register</param>
-        /// <param name="x">The amount to be written to a register.</param>
-        public void writeRegister(uint r, uint x)
+        /// <param name="x">The amount to be written to a register. Form of a byteArray
+        /// </param>
+        public void writeRegister(uint r, byte[] x)
         {
             if (r < 16)
-                reg[r].WriteWord(0, x);
+            {
+                for (uint i = 0; i < x.Length; ++i)
+                {
+                    reg[r].WriteByte(i, x[i]);
+                }
+            }
+
         }
 
         /// <summary>
