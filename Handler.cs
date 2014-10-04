@@ -216,10 +216,17 @@ namespace GDBStub
                 case 'p':
                     // READ REGISTER COMMAND
                     // defaults to dump reg #15
-                    int regval = int.Parse(cmd.Substring(1),System.Globalization.NumberStyles.HexNumber);                            
-                    this.Respond(byteArrayToString(Computer.Instance.dumpRegister(15),4), ns);
-                    Console.WriteLine("Print Register");
-                    Console.WriteLine(cmd);
+                    // rejects if it's greater that 0x0F
+                    string reg = cmd.Substring(1);
+                    uint regNum = Convert.ToUInt32(reg, 16);
+                    if (regNum < 0x10)
+                    {
+                        this.Respond(byteArrayToString(Computer.Instance.dumpRegister(regNum),4), ns);
+                    }
+                    else
+                    {
+                        this.Respond("", ns);
+                    }
                     break;
 
                 case 'P':
@@ -273,13 +280,14 @@ namespace GDBStub
                         // for testing purposes the response is QC0                
                         this.Respond("QC0", ns);                    
                     }
-                    else if (cmd == "qSupported:qRelocInsn+")
+                    else if (cmd.StartsWith("qSupported"))
                     {
                         // initial phase of handshake
                         // server responds with packetsize (in hex)
                         // for testing purposes the respone is 0x79 (15 32-bit registers 
                         // [requiring 8 bits ea.] + 1 extra bit)                                
-                        this.Respond("PacketSize=79", ns);
+                        //this.Respond("PacketSize=79", ns);
+                        this.Respond("", ns);
                     }
 
                     break;
@@ -318,6 +326,10 @@ namespace GDBStub
                 case 'Z':
                     // SET BREAKPOINT COMMAND
                     // Computer.Instance.setBreakPoint(
+                    char[] ZDelims = {','};
+                    string[] Zsa = cmd.Split(ZDelims);
+                    Computer.Instance.setBreakPoint(Convert.ToUInt32(Zsa[1], 16), Convert.ToUInt16(Zsa[2], 16));
+                    this.Respond("OK", ns);
                     Console.WriteLine("Set BreakPoint");
                     Console.WriteLine(cmd);
                     break;
