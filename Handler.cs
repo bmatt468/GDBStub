@@ -53,6 +53,7 @@ namespace GDBStub
                     {
                         // Translate data bytes to a ASCII string.
                         data = System.Text.Encoding.ASCII.GetString(buffer, 0, i);
+                        //NOT IN HEX!!!!
                         Console.WriteLine(String.Format("Received: {0}", data));
 
                         // Process the data sent by the client.
@@ -206,12 +207,13 @@ namespace GDBStub
 
                 case 'M':
                     // WRITE AT MEMORY COMMAND
+                    //Maddress,len:info
                     char[] MDelim = {',', ':'};
                     string[] Msa = cmd.Substring(1).Split(MDelim);
-                    byte[] ba = FixThatBugWeFound(Msa[2], Convert.ToInt32(Msa[1]));                                          
-                    Computer.Instance.writeRAM((uint)Convert.ToInt32(Msa[0],16), ba);
+                    byte[] ba = FixThatBugWeFound(Msa[2], Convert.ToInt32(Msa[1], 16));
+                    Computer.Instance.writeRAM(Convert.ToUInt32(Msa[0], 16), ba , Convert.ToInt32(Msa[1]));
                     this.Respond("OK", ns);
-                    Console.WriteLine(Computer.Instance.getRAM().getHash());
+                    Logger.Instance.writeLog(String.Format("HASH: {0}",Computer.Instance.getRAM().getHash()));
                     break;
 
                 case 'p':

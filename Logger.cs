@@ -144,6 +144,16 @@ namespace GDBStub
             }
         }//write Log
 
+
+        internal string byteArrayToString(byte[] x)
+        {
+            string output = "";
+            for (int i = 0; i < x.Length; ++i)
+            {
+                output += Convert.ToString(x[i], 16).PadLeft(2, '0');
+            }
+            return output;
+        }
     }//trace class
 
 }//namespace

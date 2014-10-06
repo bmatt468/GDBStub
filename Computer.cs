@@ -203,7 +203,7 @@ namespace GDBStub
                     reg[r].WriteByte(i, x[i]);
                 }
             }
-            Logger.Instance.writeLog("REG: Wrote info to REG");
+            Logger.Instance.writeLog(String.Format("REG: Wrote {0} to REG", Logger.Instance.byteArrayToString(x)));
 
         }
 
@@ -212,14 +212,18 @@ namespace GDBStub
         /// </summary>
         /// <param name="addr">The address to start in memory</param>
         /// <param name="x">The byte array to write to memory</param>
-        public void writeRAM(uint addr, byte[] x ) 
+        public void writeRAM(uint addr, byte[] x , int len) 
         {
             uint baseAddr = addr;
             for (int i = 0; i < x.Length; ++addr, ++i)
             {
                 RAM.WriteByte(addr, x[i]);
+               // Logger.Instance.writeLog(string.Format("RAM: Wrote info to MEM at {0}", Convert.ToString(addr,16)));
+               // Logger.Instance.writeLog(String.Format("RAM: Info = {0}", Convert.ToString(x[i],16)));
             }
-            Logger.Instance.writeLog("RAM: Wrote info to MEM");
+            Logger.Instance.writeLog(string.Format("RAM: Wrote info to MEM at {0}", Convert.ToString(baseAddr,16)));
+
+
 
         }
 
