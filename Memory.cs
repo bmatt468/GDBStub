@@ -182,5 +182,13 @@ namespace GDBStub
             }
                 return output;
         }
+
+        internal string print()
+        {
+            string output = "";
+
+
+            return output;
+        }
     }
 }

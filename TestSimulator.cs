@@ -27,28 +27,28 @@ namespace GDBStub
             byte[] elfArray = File.ReadAllBytes("test1.exe");
             e.ReadHeader(elfArray);
 
-            comp.writeElfToRam(e, elfArray, ref ram);
+            comp.writeElfToRam(e, elfArray);
 
             string resultHash = ram.getHash();
             string hash = "3500a8bef72dfed358b25b61b7602cf1";
             Debug.Assert(hash.ToUpper() == resultHash);
 
-            ram.CLEAR();
+            comp.CLEAR();
 
             Logger.Instance.writeLog("Test: Testing Hash of test2.exe");
             elfArray = File.ReadAllBytes("test2.exe");
             e.ReadHeader(elfArray);
-            comp.writeElfToRam(e, elfArray, ref ram);
+            comp.writeElfToRam(e, elfArray);
             resultHash = ram.getHash();
             hash = "0a81d8b63d44a192e5f9f52980f2792e";
             Debug.Assert(hash.ToUpper() == resultHash);
 
-            ram.CLEAR();
+            comp.CLEAR();
 
             Logger.Instance.writeLog("Test: Testing Hash of test3.exe");
             elfArray = File.ReadAllBytes("test3.exe");
             e.ReadHeader(elfArray);
-            comp.writeElfToRam(e, elfArray, ref ram);
+            comp.writeElfToRam(e, elfArray);
             resultHash = ram.getHash();
             hash = "977159b662ac4e450ed62063fba27029";
             Debug.Assert(hash.ToUpper() == resultHash);

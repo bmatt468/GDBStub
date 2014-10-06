@@ -211,6 +211,7 @@ namespace GDBStub
                     byte[] ba = FixThatBugWeFound(Msa[2], Convert.ToInt32(Msa[1]));                                          
                     Computer.Instance.writeRAM((uint)Convert.ToInt32(Msa[0],16), ba);
                     this.Respond("OK", ns);
+                    Console.WriteLine(Computer.Instance.getRAM().getHash());
                     break;
 
                 case 'p':

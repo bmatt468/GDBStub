@@ -98,8 +98,8 @@ namespace GDBStub
                     this.trace.WriteLine(myComp.getStepNumber().ToString().PadLeft(6, '0') + ' ' +
                                     myComp.getReg(15).getRegString() + ' ' +
                                     myComp.getCheckSum() + ' ' +
-                                    Convert.ToInt32(myComp.getN()) + Convert.ToInt32(myComp.getZ()) +
-                                    Convert.ToInt32(myComp.getC()) + Convert.ToInt32(myComp.getF()) + ' ' +
+                                    Convert.ToInt32(myComp.getFlag('N')) + Convert.ToInt32(myComp.getFlag('Z')) +
+                                    Convert.ToInt32(myComp.getFlag('C')) + Convert.ToInt32(myComp.getFlag('F')) + ' ' +
                                     "0=" + myComp.getReg(0).getRegString() + ' ' +
                                     "1=" + myComp.getReg(1).getRegString() + ' ' +
                                     "2=" + myComp.getReg(2).getRegString() + ' ' +

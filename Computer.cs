@@ -83,10 +83,31 @@ namespace GDBStub
 
         public bool getIsRunning(){ return is_running;}
 //flags
-        public bool getN() { return N; }
-        public bool getZ() { return Z; }
-        public bool getC() { return C; }
-        public bool getF() { return F; }
+
+        public bool getFlag(char flag)
+        {
+            bool output = false;
+            switch (flag)
+            {
+                case 'N':
+                    output = N;
+                    break;
+                case 'Z':
+                    output = Z;
+                    break;
+                case 'C':
+                    output = C;
+                    break;
+                case 'F':
+                    output = F;
+                    break;
+                default:
+                    Logger.Instance.writeLog("FLAG: INVALID FLAG REQUESTED");
+                    break;
+            }
+            Logger.Instance.writeLog(String.Format("FLAG: {0} = {1}", flag, output.ToString()));
+            return output;
+        }
 
         public string getCheckSum() { return RAM.getHash(); }
         public Register getReg(uint r) { return reg[r]; }
@@ -95,7 +116,12 @@ namespace GDBStub
         public uint getStepNumber(){ return step_number;}
 
         // returns the tracing data for gdb
-        public bool getTraceStatus(){ return Logger.Instance.getTraceStatus(); }
+        public bool getTraceStatus()
+        {
+            bool output =  Logger.Instance.getTraceStatus();
+            Logger.Instance.writeLog(String.Format("TRACE: Status {0}", output.ToString()));
+            return output;
+        }
 
         public bool getThreadStatus() { return programThread.IsAlive; }
 
@@ -104,7 +130,12 @@ namespace GDBStub
 
         //dumps the requested Ram into a byte array
         public byte[] dumpRAM(uint addr, int length)
-            { return RAM.dump(addr, length); }
+        {
+            Logger.Instance.writeLog(String.Format("RAM: Address = {0}", addr));
+            Logger.Instance.writeLog(String.Format("RAM: Length = {0}", length));
+            Logger.Instance.writeLog(RAM.getAtAddress(addr,length));
+            return RAM.dump(addr, length); 
+        }
 
 
         //returns the register values from r0 - r15
@@ -120,6 +151,7 @@ namespace GDBStub
                         output[outputIndex] = reg[regIndex].ReadByte(byteIndex);
                     }
                 }
+                Logger.Instance.writeLog("REG: Returned");
             return output;
         }
 
@@ -133,7 +165,11 @@ namespace GDBStub
         /// param name="n" Unsigned 32 bit integer that references
         /// the register asked for
         /// returns A byte array
-        public byte[] dumpRegister(UInt32 n) { return reg[n].getRegister(); }
+        public byte[] dumpRegister(UInt32 n) 
+        {
+            Logger.Instance.writeLog(string.Format("REG: Requested {0}", n));  
+            return reg[n].getRegister(); 
+        }
 
 
 
@@ -142,6 +178,7 @@ namespace GDBStub
             bool output = false;
             if ((rawInstruction.ReadWord(0) & 0xE1200070) == 0xE1200070)
                 output = true;
+            
             return output;
         }
 
@@ -166,6 +203,7 @@ namespace GDBStub
                     reg[r].WriteByte(i, x[i]);
                 }
             }
+            Logger.Instance.writeLog("REG: Wrote info to REG");
 
         }
 
@@ -181,6 +219,7 @@ namespace GDBStub
             {
                 RAM.WriteByte(addr, x[i]);
             }
+            Logger.Instance.writeLog("RAM: Wrote info to MEM");
 
         }
 
@@ -194,6 +233,7 @@ namespace GDBStub
             {
                 reg[i].CLEAR();
             }
+            Logger.Instance.writeLog("REG: Cleared");
         }
 
 
@@ -201,6 +241,7 @@ namespace GDBStub
         {
             RAM.CLEAR();
             clearRegisters();
+            Logger.Instance.writeLog("COMP: RESET");
         }
 
         /// <summary>
@@ -222,6 +263,7 @@ namespace GDBStub
                 storedCommands[addr] = saveCommand;
             //Write the new breakpoint
             RAM.WriteWord(addr, breakPointValue);
+            Logger.Instance.writeLog(string.Format("BREAK: Set At {0}", addr));
 
         }
 
@@ -237,6 +279,8 @@ namespace GDBStub
             try
             {
                 RAM.WriteWord(addr, storedCommands[addr]);
+                Logger.Instance.writeLog(string.Format("BREAK: Removed At {0}", addr));
+
             }
             catch 
             {
@@ -278,7 +322,7 @@ namespace GDBStub
 
                     reg[15].WriteWord(0,e.elfHeader.e_entry);
 
-                    writeElfToRam(e, elfArray, ref RAM);
+                    writeElfToRam(e, elfArray);
 
 
                     string ramOutput = RAM.getAtAddress((uint)e.elfphs[0].p_vaddr, 8);
@@ -313,11 +357,8 @@ namespace GDBStub
 
 
         //writes the ELF file to the RAM array
-        public void writeElfToRam(ELFReader e, byte[] elfArray, ref Memory ram)
+        public void writeElfToRam(ELFReader e, byte[] elfArray)
         {
-
-            //Logger.Instance.writeLog("RAM: Size {0}", ram.getSize());
-
 
             for (int prog = 0; prog < e.elfHeader.e_phnum; prog++)
             {
@@ -335,7 +376,7 @@ namespace GDBStub
                         RamAddressCounter < e.elfphs[prog].p_filesz + ramAddress;
                             RamAddressCounter++, elfOffSetCounter++)
                 {
-                    ram.WriteByte(RamAddressCounter, elfArray[elfOffSetCounter]);
+                    RAM.WriteByte(RamAddressCounter, elfArray[elfOffSetCounter]);
                 }//for
 
 
@@ -368,8 +409,7 @@ namespace GDBStub
         public void reset()
         {
             //reset logic
-            RAM.CLEAR();
-            clearRegisters();
+            this.CLEAR();
             readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
 
             step_number = 0;
@@ -480,11 +520,14 @@ namespace GDBStub
                             {
                                 //breakpoint
                                 is_running = false;
+                                Logger.Instance.writeLog(string.Format("BREAK: Hit a BreakPoint at step# {0}", step_number));
                             }
                         }else
                         {
                             //finished
                             is_running = false;
+                            Logger.Instance.writeLog("COMP: Finished");
+
                             //W00
                             Logger.Instance.writeLog(reg[15].getRegString());
                             status endedStatus = new status();
@@ -492,6 +535,7 @@ namespace GDBStub
                             endedStatus.statval = "00";
                             compStatus = endedStatus;
                             this.CLEAR();
+                            return;
                         }
 
                     //write to the trace log...
@@ -503,6 +547,7 @@ namespace GDBStub
                 stoppedStatus.statchar = 'S';
                 stoppedStatus.statval = "05";
                 compStatus = stoppedStatus;
+                Logger.Instance.writeLog("COMP: Stopped");
 
             }
 
