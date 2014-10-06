@@ -131,7 +131,7 @@ namespace GDBStub
         //dumps the requested Ram into a byte array
         public byte[] dumpRAM(uint addr, int length)
         {
-            Logger.Instance.writeLog(String.Format("RAM: Address = {0}", addr));
+            Logger.Instance.writeLog(String.Format("RAM: Address = {0}", Convert.ToString(addr, 16)));
             Logger.Instance.writeLog(String.Format("RAM: Length = {0}", length));
             Logger.Instance.writeLog(RAM.getAtAddress(addr,length));
             return RAM.dump(addr, length); 
@@ -167,7 +167,7 @@ namespace GDBStub
         /// returns A byte array
         public byte[] dumpRegister(UInt32 n) 
         {
-            Logger.Instance.writeLog(string.Format("REG: Requested {0}", n));  
+            Logger.Instance.writeLog(string.Format("REG: # Requested {0}", n));  
             return reg[n].getRegister(); 
         }
 
@@ -263,7 +263,7 @@ namespace GDBStub
                 storedCommands[addr] = saveCommand;
             //Write the new breakpoint
             RAM.WriteWord(addr, breakPointValue);
-            Logger.Instance.writeLog(string.Format("BREAK: Set At {0}", addr));
+            Logger.Instance.writeLog(string.Format("BREAK: Set At {0}", Convert.ToString(addr,16)));
 
         }
 
@@ -279,7 +279,7 @@ namespace GDBStub
             try
             {
                 RAM.WriteWord(addr, storedCommands[addr]);
-                Logger.Instance.writeLog(string.Format("BREAK: Removed At {0}", addr));
+                Logger.Instance.writeLog(string.Format("BREAK: Removed At {0}", Convert.ToString(addr,16)));
 
             }
             catch 
@@ -519,8 +519,15 @@ namespace GDBStub
                             else
                             {
                                 //breakpoint
+                                
                                 is_running = false;
+                                status breakedStatus = new status();
+                                breakedStatus.statchar = 'S';
+                                breakedStatus.statval = "05";
+                                compStatus = breakedStatus;
+                                Logger.Instance.writeLog("COMP: Stopped");
                                 Logger.Instance.writeLog(string.Format("BREAK: Hit a BreakPoint at step# {0}", step_number));
+                                return;
                             }
                         }else
                         {
