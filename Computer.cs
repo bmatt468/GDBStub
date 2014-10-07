@@ -65,7 +65,7 @@ namespace GDBStub
         {
             this.RAM = new Memory(Option.Instance.getMemSize());
             
-            Logger.Instance.clearLog();
+            //Logger.Instance.clearLog();
 
             //defines 15 registers, 0 - 15
             for (int i = 0; i < 16; i++){
@@ -397,16 +397,8 @@ namespace GDBStub
  //Load, Reset, Stop, Step, and Run and Go.
         public void load(string file, int memSize = -1)
         {
-            if (memSize == -1)
-            {
-                memSize = Option.Instance.getMemSize();
-            }
-            else
-            {
-                Option.Instance.setMemSize(memSize);
-            }
-            Option.Instance.setFile(file);
-            readELF(Option.Instance.getFile(), memSize);
+
+            readELF(file, memSize);
             checkSum = RAM.getHash();
             step_number = 0;
             Logger.Instance.writeLog("RAM: Hash is " + RAM.getHash());
@@ -425,7 +417,7 @@ namespace GDBStub
             readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
 
             step_number = 0;
-            Logger.Instance.writeLog("*****\nReset\n*****\n");
+            Logger.Instance.writeLog("***** Reset *****\n");
         }
 
         /*
@@ -585,6 +577,8 @@ namespace GDBStub
 
 
 // end Actions
+
+        //this is used for non gdb access
         // this method will probably be 
         // refactored into the gdb handler class.
         internal void command(string input)

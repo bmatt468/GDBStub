@@ -24,7 +24,7 @@ namespace GDBStub
             Logger.Instance.writeLog("Test: Starting Simulator unit tests");
 
             Logger.Instance.writeLog("Test: Testing Hash of test1.exe");
-            comp.load("test1.exe");
+            comp.load("test1.exe", 32768);
 
             string resultHash = comp.getRAM().getHash();
             string hash = "3500a8bef72dfed358b25b61b7602cf1";
@@ -35,7 +35,7 @@ namespace GDBStub
             comp.CLEAR();
 
             Logger.Instance.writeLog("Test: Testing Hash of test2.exe");
-            comp.load("test2.exe");
+            comp.load("test2.exe", 32768);
             resultHash = comp.getRAM().getHash();
 
             hash = "0a81d8b63d44a192e5f9f52980f2792e";
@@ -46,7 +46,7 @@ namespace GDBStub
             comp.CLEAR();
 
             Logger.Instance.writeLog("Test: Testing Hash of test3.exe");
-            comp.load("test3.exe");
+            comp.load("test3.exe", 32768);
 
 
             resultHash = comp.getRAM().getHash();
