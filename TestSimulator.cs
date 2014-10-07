@@ -24,34 +24,36 @@ namespace GDBStub
             Logger.Instance.writeLog("Test: Starting Simulator unit tests");
 
             Logger.Instance.writeLog("Test: Testing Hash of test1.exe");
-            byte[] elfArray = File.ReadAllBytes("test1.exe");
-            e.ReadHeader(elfArray);
+            comp.load("test1.exe");
 
-            comp.writeElfToRam(e, elfArray);
-
-            string resultHash = ram.getHash();
+            string resultHash = comp.getRAM().getHash();
             string hash = "3500a8bef72dfed358b25b61b7602cf1";
+
             Debug.Assert(hash.ToUpper() == resultHash);
+           
 
             comp.CLEAR();
 
             Logger.Instance.writeLog("Test: Testing Hash of test2.exe");
-            elfArray = File.ReadAllBytes("test2.exe");
-            e.ReadHeader(elfArray);
-            comp.writeElfToRam(e, elfArray);
-            resultHash = ram.getHash();
+            comp.load("test2.exe");
+            resultHash = comp.getRAM().getHash();
+
             hash = "0a81d8b63d44a192e5f9f52980f2792e";
+
             Debug.Assert(hash.ToUpper() == resultHash);
+            
 
             comp.CLEAR();
 
             Logger.Instance.writeLog("Test: Testing Hash of test3.exe");
-            elfArray = File.ReadAllBytes("test3.exe");
-            e.ReadHeader(elfArray);
-            comp.writeElfToRam(e, elfArray);
-            resultHash = ram.getHash();
+            comp.load("test3.exe");
+
+
+            resultHash = comp.getRAM().getHash();
             hash = "977159b662ac4e450ed62063fba27029";
+
             Debug.Assert(hash.ToUpper() == resultHash);
+            
             Logger.Instance.writeLog("Test: All Hashes correct\n");
 
             //Logger.Instance.toggleTrace();
@@ -70,7 +72,7 @@ namespace GDBStub
             //append
             Logger.Instance.writeLog("Test: Starting RAM unit tests");
             Memory tram = new Memory(32768);
-                        Logger.Instance.closeTrace();
+            Logger.Instance.closeTrace();
 
             Logger.Instance.writeLog("Test: Read/Write Byte");
             byte byteRes = tram.ReadByte(0);

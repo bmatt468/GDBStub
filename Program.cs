@@ -22,11 +22,19 @@ namespace GDBStub
         {
             if (Option.Instance.parseArgs(args))    //verify the proper command line input
             {
+                if (Option.Instance.getTest())
+                {
+                   
+                    TestRam.RunTests();
+                    TestSimulator.RunTests();
+                    
+                }
+
                 if (Option.Instance.getFile() != "")
                 {
                     //wanted some data to play with
                     //specified through command line, load the file
-                    Computer.Instance.readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
+                    Computer.Instance.load(Option.Instance.getFile(), Option.Instance.getMemSize());
                 }
 
                 if (Option.Instance.getDebug())

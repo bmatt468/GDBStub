@@ -395,10 +395,18 @@ namespace GDBStub
 
  //---------------Actions
  //Load, Reset, Stop, Step, and Run and Go.
-        private void load(string file)
+        public void load(string file, int memSize = -1)
         {
+            if (memSize == -1)
+            {
+                memSize = Option.Instance.getMemSize();
+            }
+            else
+            {
+                Option.Instance.setMemSize(memSize);
+            }
             Option.Instance.setFile(file);
-            readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
+            readELF(Option.Instance.getFile(), memSize);
             checkSum = RAM.getHash();
             step_number = 0;
             Logger.Instance.writeLog("RAM: Hash is " + RAM.getHash());

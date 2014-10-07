@@ -23,3 +23,9 @@ All requirements are believed to have been completed.
 Important notes.  
 
 The Mov command will give you a address in Hex, a length of data in hex and then hex data to be loaded. 
+
+Command Line Options:
+"--load fileName.exe" loads a file into RAM
+"--debug" makes the program listen on port 8080 for a connection from a gdb stub
+"--mem XXX" where XXX is any positive number less than 1 GB sets the size of memory to XXX
+"--test" runs the test cases.
