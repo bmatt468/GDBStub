@@ -22,14 +22,18 @@ namespace GDBStub
         {
             if (Option.Instance.parseArgs(args))    //verify the proper command line input
             {
+
+                //runs test cases
                 if (Option.Instance.getTest())
                 {
                    
                     TestRam.RunTests();
                     TestSimulator.RunTests();
+                    TestDecodeExecute.RunTests();
                     
                 }
 
+                // pre-loads a file
                 if (Option.Instance.getFile() != "")
                 {
                     //wanted some data to play with
@@ -37,6 +41,7 @@ namespace GDBStub
                     Computer.Instance.load(Option.Instance.getFile(), Option.Instance.getMemSize());
                 }
 
+                // listens for gdb connection
                 if (Option.Instance.getDebug())
                 {   
 
@@ -49,6 +54,7 @@ namespace GDBStub
                 
                 danielTesting(args);
 
+                Logger.Instance.clearLog();
             
             }
             
@@ -59,24 +65,7 @@ namespace GDBStub
         static void danielTesting(string[] args)
         {
 
-                if (Option.Instance.getTest())
-                {
-                    //run tests
-                    TestRam.RunTests();
-                    TestSimulator.RunTests();
-                    Console.WriteLine("All tests passed see log.txt for details");
-                   
-
-                }
-                    if (Option.Instance.getFile() != "")
-                    {
-                        //specified through command line, load the file
-                        Logger.Instance.writeLog("File: Loading");
-                        Computer.Instance.readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
-                        Console.WriteLine("File Loaded");
-
-                        Logger.Instance.writeLog("File: Loaded");
-                    }
+ 
             //THis will be replaces later
             //with information of just running
                     Console.WriteLine("\n");

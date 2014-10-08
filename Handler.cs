@@ -183,6 +183,7 @@ namespace GDBStub
                     // kill client command
                     // done automatically but looking for clean method
                     Console.WriteLine("Kill");
+                    Logger.Instance.clearLog();
                     System.Environment.Exit(0);
                     break;
 

@@ -48,17 +48,83 @@ namespace GDBStub
         //decodes the int into a command.  like mov r0, r1
         public Instruction decode(Memory data)
         {
-            Instruction output = new Instruction(data);
+            //data.WriteWord(0,0xe3a02030);//e3a02030 mov r2, #48
+            InstructionParser parser = new InstructionParser();
+            Instruction inst = parser.parse(data);
 
 
             
-            return output;
+            return inst;
         }
 
         //executes the actual data by movine registers and stuff
         public void execute(Instruction command)
         {
+        //won't let me do a switch statement so bare with the ifs....
+            if (command is dataManipulation)
+            {
+                runOpcode((dataManipulation)command);
+ 
+            }
 
+        }
+
+
+        private void runOpcode(dataManipulation dman)
+        {
+            Logger.Instance.writeLog("CMD: Data Manipulation");
+
+            //if always DO IT!
+            if (dman.cond == 0xE)
+            {
+                switch (dman.opcode)
+                {
+                    case 0:
+                        //and
+                        break;
+                    case 1: //EOR
+                        break;
+                    case 2: //SUb
+                        break;
+                    case 3: //RSB
+                        break;
+                    case 4: //ADD
+                        break;
+                    case 5: //ADC
+                        break;
+                    case 6: //SBC
+                        break;
+                    case 7: //RSC
+                        break;
+                    case 8: //TST
+                        break;
+                    case 9: //teq
+                        break;
+                    case 10: //cmp
+                        break;
+                    case 11: //cmn
+                        break;
+                    case 12: //oor
+                        break;
+                    case 13: //mov
+                        this.mov(dman);
+                        break;
+                    case 14: //bic
+                        break;
+                    case 15: //movn
+                        break;
+
+                    default:
+                        //something bad
+                        break;
+                }//switc
+            }//if
+        }
+
+        private void mov(dataManipulation dman)
+        {
+            reg[dman.rd].WriteWord(0, dman.shiftOp.offset);
+            Logger.Instance.writeLog(String.Format("CMD: mov {0},{1}", dman.rd,dman.shiftOp.offset));
         }
 
     }

@@ -5,7 +5,5 @@ using System.Text;
 
 namespace GDBStub
 {
-    class Operand2
-    {
-    }
+
 }

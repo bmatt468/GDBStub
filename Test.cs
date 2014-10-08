@@ -133,4 +133,61 @@ namespace GDBStub
         }
 
     }
-}
+
+
+    public class TestDecodeExecute
+    {
+        public static void RunTests()
+                {
+                    //append
+                    Logger.Instance.writeLog("Test: Starting Decode Execute unit tests");
+            
+                    Logger.Instance.closeTrace();
+                    //0xe3a02030 mov r2, #48
+                    Memory RAM = new Memory();
+                    Register[] reg = new Register[16];
+                    //defines 16 registers, 0 - 15
+                    for (int i = 0; i < 16; i++)
+                    {
+                       reg[i] = new Register();
+                    }
+
+                    CPU cpu = new CPU(ref RAM, ref reg);
+                    
+                    //put the instruction into memory
+                    RAM.WriteWord(0,0xe3a02030);
+
+                    //get the program counter to point at the test command
+                    reg[15].WriteWord(0, 0);
+
+                    //fetch, decode, execute commands here
+                    Memory rawInstruction = cpu.fetch();
+                
+                    /// make sure we fetched the right hting
+                    Debug.Assert(rawInstruction.ReadWord(0) == 0xe3a02030);
+
+                    Logger.Instance.writeLog("TEST: Fetched");
+
+
+                    //decode the uint!
+                    Instruction cookedInstruction = cpu.decode(rawInstruction);
+                    Debug.Assert(cookedInstruction is dataManipulation);
+                    Logger.Instance.writeLog("TEST: Decoded");
+
+                    //exeucte the decoded Command!!
+                    cpu.execute(cookedInstruction);
+
+                    Debug.Assert(reg[2].ReadWord(0) == 48);
+                    Logger.Instance.writeLog("TEST: Executed");
+
+
+
+                    Logger.Instance.writeLog("TEST: All Decode/Execute Tests Passed");
+
+                    Logger.Instance.closeTrace();
+ 
+                }//runTests
+
+    }//testDecodeExecute
+
+}//namespace
