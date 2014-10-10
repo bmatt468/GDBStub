@@ -75,4 +75,10 @@ namespace GDBStub
 
        
     }
+
+
+    class coProcessorOperand
+    {
+
+    }
 }

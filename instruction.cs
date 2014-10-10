@@ -33,6 +33,8 @@ namespace GDBStub
         public bool W { get; set; }
         public bool L { get; set; }
 
+        public ShifterOperand shiftOp { get; set; }
+
 
 
     }
@@ -48,5 +50,63 @@ namespace GDBStub
 
 
     }
+
+    class Branch : Instruction
+    {
+        public bool LN { get; set; }
+        //23bit long offset
+        public int offset { get; set; }
+    }
+
+    class Multiply : Instruction
+    {
+
+    }
+
+    class Swap : Instruction
+    {
+
+    }
+
+    class MRS : Instruction
+    {
+
+    }
+
+    class MSR : Instruction
+    {
+
+    }
+
+    class dataMoveMultiple : Instruction
+    {
+
+    }
+
+    class CoProcessorInstruction : Instruction
+    {
+        coProcessorOperand operand;
+    }
+
+    class Transfer : CoProcessorInstruction
+    {
+
+    }
+
+    class Op : CoProcessorInstruction
+    {
+
+    }
+
+    class RTransfer : CoProcessorInstruction
+    {
+
+    }
+
+    class SWI : CoProcessorInstruction
+    {
+
+    }
+
 
 }

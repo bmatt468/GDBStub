@@ -83,7 +83,6 @@ namespace GDBStub
 
         public bool getIsRunning(){ return is_running;}
 //flags
-
         public bool getFlag(char flag)
         {
             bool output = false;
@@ -151,7 +150,7 @@ namespace GDBStub
                         output[outputIndex] = reg[regIndex].ReadByte(byteIndex);
                     }
                 }
-                Logger.Instance.writeLog("REG: Returned");
+                Logger.Instance.writeLog("REG: Returned all of the Registers");
             return output;
         }
 
@@ -167,7 +166,7 @@ namespace GDBStub
         /// returns A byte array
         public byte[] dumpRegister(UInt32 n) 
         {
-            Logger.Instance.writeLog(string.Format("REG: # Requested {0}", n));  
+            Logger.Instance.writeLog(string.Format("REG: Requested # {0}", n));  
             return reg[n].getRegister(); 
         }
 

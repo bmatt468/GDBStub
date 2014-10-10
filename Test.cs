@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Timers;
 
 
 namespace GDBStub
@@ -17,6 +18,7 @@ namespace GDBStub
         public static void RunTests()
         {
             //append
+
             ELFReader e = new ELFReader();
             Memory ram = new Memory(32768);
             Computer comp = new Computer();
@@ -30,7 +32,32 @@ namespace GDBStub
             string hash = "3500a8bef72dfed358b25b61b7602cf1";
 
             Debug.Assert(hash.ToUpper() == resultHash);
-           
+            Logger.Instance.writeLog("Test: Testing BreakPoint");
+
+            uint bPoint = comp.getReg(15).ReadWord(0) + 8;
+            comp.setBreakPoint(bPoint);
+            
+            comp.step();
+            comp.step();
+
+            //System.Threading.Thread.Sleep(10000);
+            Logger.Instance.writeLog("Test: Hit Break Point");
+            Debug.Assert(comp.compStatus.statchar == 'S');
+            Debug.Assert(comp.compStatus.statval == "05");
+            uint pc = comp.getReg(15).ReadWord(0);
+            comp.step();
+            Debug.Assert(pc == comp.getReg(15).ReadWord(0));
+
+            comp.removeBreakPoint(bPoint);
+            comp.step();
+            Debug.Assert(pc < comp.getReg(15).ReadWord(0));
+            comp.run();
+            while (comp.compStatus.statchar != 'W')
+            { ;}
+
+            Debug.Assert(comp.compStatus.statchar == 'W');
+            Debug.Assert(comp.compStatus.statval == "00");
+            Logger.Instance.writeLog("Test: Removed Break Point");
 
             comp.CLEAR();
 
