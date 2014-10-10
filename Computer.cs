@@ -104,7 +104,7 @@ namespace GDBStub
                     Logger.Instance.writeLog("FLAG: INVALID FLAG REQUESTED");
                     break;
             }
-            Logger.Instance.writeLog(String.Format("FLAG: {0} = {1}", flag, output.ToString()));
+            //Logger.Instance.writeLog(String.Format("FLAG: {0} = {1}", flag, output.ToString()));
             return output;
         }
 

@@ -124,7 +124,8 @@ namespace GDBStub
         private void mov(dataManipulation dman)
         {
             reg[dman.rd].WriteWord(0, dman.shiftOp.offset);
-            Logger.Instance.writeLog(String.Format("CMD: mov {0},{1}", dman.rd,dman.shiftOp.offset));
+            Logger.Instance.writeLog(String.Format("CMD: mov {0},{1} : {2}",
+                dman.rd,dman.shiftOp.offset, Convert.ToString(dman.originalBits,16)));
         }
 
     }

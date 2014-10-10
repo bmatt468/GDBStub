@@ -7,6 +7,8 @@ namespace GDBStub
 {
     class Instruction
     {
+        public uint originalBits { get; set; }
+
         public uint rd { get; set; }
         public uint rn { get; set; }
 
