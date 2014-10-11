@@ -123,6 +123,23 @@ namespace GDBStub
 
         private void mov(dataManipulation dman)
         {
+            uint RmVal = reg[dman.shiftOp.Rm].ReadWord(0);
+            if (!dman.I)
+            {
+                //it's a register!
+                if (dman.shiftOp.bit4 && !dman.shiftOp.bit7)
+                {
+                    //shifted by a register!
+                    dman.shiftOp.shiftRM(RmVal, reg[dman.shiftOp.Rs].ReadWord(0));
+
+                }
+                else
+                {
+                    //shifted by an immediate value!
+                    dman.shiftOp.shiftRM(RmVal, dman.shiftOp.shift_imm);
+                }
+            }
+            
             reg[dman.rd].WriteWord(0, dman.shiftOp.offset);
             Logger.Instance.writeLog(String.Format("CMD: mov {0},{1} : {2}",
                 dman.rd,dman.shiftOp.offset, Convert.ToString(dman.originalBits,16)));

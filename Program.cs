@@ -22,6 +22,7 @@ namespace GDBStub
         {
             if (Option.Instance.parseArgs(args))    //verify the proper command line input
             {
+                Logger.Instance.clearLog();
 
                 //runs test cases
                 if (Option.Instance.getTest())
