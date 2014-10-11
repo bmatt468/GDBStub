@@ -30,7 +30,8 @@ namespace GDBStub
                    
                     TestRam.RunTests();
                     TestSimulator.RunTests();
-                    TestDecodeExecute.RunTests();
+                    TestDecodeExecute TFDE = new TestDecodeExecute();
+                    TFDE.RunTests();
                     
                 }
 

@@ -164,105 +164,47 @@ namespace GDBStub
 
     public class TestDecodeExecute
     {
-        public static void RunTests()
+
+        Memory RAM = new Memory();
+        Register[] reg = new Register[16];
+        CPU cpu;
+        public void RunTests()
                 {
                     //append
                     Logger.Instance.writeLog("Test: Starting Decode Execute unit tests");
             
                     Logger.Instance.closeTrace();
                     //0xe3a02030 mov r2, #48
-                    Memory RAM = new Memory();
-                    Register[] reg = new Register[16];
                     //defines 16 registers, 0 - 15
                     for (int i = 0; i < 16; i++)
                     {
                        reg[i] = new Register();
                     }
 
-                    CPU cpu = new CPU(ref RAM, ref reg);
+                    cpu = new CPU(ref RAM, ref reg);
                     
                     //put the instruction into memory
-                    RAM.WriteWord(0,0xe3a02030);
 
-                    //get the program counter to point at the test command
-                    reg[15].WriteWord(0, 0);
-
-                    //fetch, decode, execute commands here
-                    Memory rawInstruction = cpu.fetch();
-                
-                    /// make sure we fetched the right hting
-                    Logger.Instance.writeLog("TEST: mov r2, #48");
-                    Debug.Assert(rawInstruction.ReadWord(0) == 0xe3a02030);
-
-                    Logger.Instance.writeLog("TEST: Fetched");
-
-
-                    //decode the uint!
-                    Instruction cookedInstruction = cpu.decode(rawInstruction);
-                    Debug.Assert(cookedInstruction is dataManipulation);
-                    Logger.Instance.writeLog("TEST: Decoded");
-
-                    //exeucte the decoded Command!!
-                    cpu.execute(cookedInstruction);
+                    Logger.Instance.writeLog("TEST: mov r2, #48 : 0xe3a02030");
+                    this.runDataManCommand(0xe3a02030);
 
                     Debug.Assert(reg[2].ReadWord(0) == 48);
                     Logger.Instance.writeLog("TEST: Executed");
 
-                    Logger.Instance.writeLog("TEST: mov r0, r3");
-                    //mov r0, r3 : e1a00003
-                    //put the instruction into memory
-                    RAM.WriteWord(0, 0xe1a00003);
 
-                    //get the program counter to point at the test command
-                    reg[15].WriteWord(0, 0);
+                    Logger.Instance.writeLog("TEST: mov r0, r3 : 0xe1a00003");
                     reg[3].WriteWord(0, 3);
 
-                    //fetch, decode, execute commands here
-                    rawInstruction = cpu.fetch();
-
-                    /// make sure we fetched the right hting
-                    Debug.Assert(rawInstruction.ReadWord(0) == 0xe1a00003);
-
-                    Logger.Instance.writeLog("TEST: Fetched");
-
-
-                    //decode the uint!
-                    cookedInstruction = cpu.decode(rawInstruction);
-                    Debug.Assert(cookedInstruction is dataManipulation);
-                    Logger.Instance.writeLog("TEST: Decoded");
-
-                    //exeucte the decoded Command!!
-                    cpu.execute(cookedInstruction);
-
+                    this.runDataManCommand(0xe1a00003);
+                    
                     Debug.Assert(reg[0].ReadWord(0) == 3);
                     Logger.Instance.writeLog("TEST: Executed");
 
                     Logger.Instance.writeLog("TEST: mov r0, r3 lsl #4 : 0xe1a00403");
-                    //mov r0, r3 : e1a00003
-                    //put the instruction into memory
-                    RAM.WriteWord(0, 0xe1a00403);
-
-                    //get the program counter to point at the test command
-                    reg[15].WriteWord(0, 0);
                     reg[3].WriteWord(0, 3);
-
-                    //fetch, decode, execute commands here
-                    rawInstruction = cpu.fetch();
-
-                    /// make sure we fetched the right hting
-                    Debug.Assert(rawInstruction.ReadWord(0) == 0xe1a00403);
-
-                    Logger.Instance.writeLog("TEST: Fetched");
-
-
-                    //decode the uint!
-                    cookedInstruction = cpu.decode(rawInstruction);
-                    Debug.Assert(cookedInstruction is dataManipulation);
-                    Logger.Instance.writeLog("TEST: Decoded");
-
-                    //exeucte the decoded Command!!
-                    cpu.execute(cookedInstruction);
-
+        
+                    this.runDataManCommand(0xe1a00403);
+                  
                     Debug.Assert(reg[0].ReadWord(0) == 0x300);
                     Logger.Instance.writeLog("TEST: Executed");
 
@@ -272,7 +214,33 @@ namespace GDBStub
 
                     Logger.Instance.closeTrace();
  
-                }//runTests
+                }
+
+        private void runDataManCommand(uint p)
+        {
+            RAM.WriteWord(0, p);
+
+            //get the program counter to point at the test command
+            reg[15].WriteWord(0, 0);
+
+            //fetch, decode, execute commands here
+            Memory rawInstruction = cpu.fetch();
+
+            /// make sure we fetched the right hting
+            Debug.Assert(rawInstruction.ReadWord(0) == p);
+
+            Logger.Instance.writeLog("TEST: Fetched");
+
+
+            //decode the uint!
+            Instruction cookedInstruction = cpu.decode(rawInstruction);
+            Debug.Assert(cookedInstruction is dataManipulation);
+            Logger.Instance.writeLog("TEST: Decoded");
+
+            //exeucte the decoded Command!!
+            cpu.execute(cookedInstruction);
+
+        }//runTests
 
     }//testDecodeExecute
 
