@@ -32,6 +32,8 @@ namespace GDBStub
                     TestSimulator.RunTests();
                     TestDecodeExecute TFDE = new TestDecodeExecute();
                     TFDE.RunTests();
+
+                    Logger.Instance.writeLog("TEST: Finished\n\n\n------------------------------");
                     
                 }
 
