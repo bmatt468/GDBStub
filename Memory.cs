@@ -128,7 +128,7 @@ namespace GDBStub
                 }
                 catch
                 {
-
+                    Logger.Instance.writeLog("\n\nFIX READ WORD\nFIX READ WORD!!!\nFIX READ WORD!!!\n");
                 }
 
                 //output = BitConverter.ToUInt32(theArray, addr);

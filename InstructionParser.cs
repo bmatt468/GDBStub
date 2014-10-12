@@ -9,13 +9,8 @@ namespace GDBStub
     //the instruction class object
     class InstructionParser
     {
-        uint conditional = 0xe; // 1110  4
-        string typeStr = "";
+
         uint type = 0;          // xx   2 determines IPUBWL, or Opcode
-        bool I, P, U, B, W, L = false; // xxxxxx 6
-        bool bit4, bit7 = false;
-        uint opcode = 0;
-        bool S = false;
 
 
         Instruction instruct = new Instruction();
@@ -43,8 +38,8 @@ namespace GDBStub
                 case 0:
                     //data manipulation 00
 
-
-                    instruct = parseDataManipulation(command);
+                    instruct = new dataManipulation();
+                    //instruct = parseDataManipulation(command);
 
 
                     break;
@@ -53,8 +48,10 @@ namespace GDBStub
                     // check the PUBWL 
                     if (command.TestFlag(0, 24) || !command.TestFlag(0, 21))
                     {
-                        instruct = parseLoadStore(command);
-                        instruct.rm = (uint)((command.ReadWord(0) & 0xF));
+                        instruct = new dataMovement();
+
+                        //instruct = parseLoadStore(command);
+                        //instruct.rm = (uint)((command.ReadWord(0) & 0xF));
    
 
                     }
@@ -70,14 +67,16 @@ namespace GDBStub
                     if (!command.TestFlag(0, 25))
                     {
                         //load store multiple
-                        instruct = parseLoadStoreMultiple(command);
+                        instruct = new dataMoveMultiple();
+                        //instruct = parseLoadStoreMultiple(command);
                     }
                     else
                     {
                         if (command.TestFlag(0, 25) && command.TestFlag(0, 27) && !command.TestFlag(0, 26))
                         {
                             //branch command.
-                            instruct = parseBranch(command);
+                            instruct = new Branch();
+                            //instruct = parseBranch(command);
                         }
                     }
                     // branch with link
@@ -94,6 +93,7 @@ namespace GDBStub
                     break;
             }
 
+            instruct.parse(command);
             instruct.cond = (uint)command.ReadByte(3) >> 4;
             instruct.type = (uint)((command.ReadByte(3) & 0x0c) >> 2);
             instruct.originalBits = (uint)command.ReadWord(0);
@@ -103,89 +103,8 @@ namespace GDBStub
 
         }
 
-        private Instruction parseBranch(Memory command)
-        {
-            Branch branch = new Branch();
-            branch.LN = command.TestFlag(0, 24);
-            branch.offset = ((int)command.ReadWord(0) & 0x00FFFFFF) << 2;
-
-            return branch;
-
-        }
-
-        private Instruction parseLoadStoreMultiple(Memory command)
-        {
-            dataMoveMultiple DMultiple = new dataMoveMultiple();
-            DMultiple.regFlags = new bool[16];
-            for (byte i = 0; i < 16; ++i)
-            {
-                DMultiple.regFlags[i] = command.TestFlag(0, i);
-            }
 
 
-            return DMultiple;
-            
-        }
-
-        public Instruction parseLoadStore(Memory command)
-        {
-            //PUBWL
-            bool R = command.TestFlag(0, 25);
-            
-
-            dataMovement dataMoveinstruct = new dataMovement();
-            if (!(command.TestFlag(0, 25) && command.TestFlag(0, 4)))
-            {
-                dataMoveinstruct.R = command.TestFlag(0, 25); ;
-                dataMoveinstruct.P = command.TestFlag(0, 24);
-                dataMoveinstruct.U = command.TestFlag(0, 23);
-                dataMoveinstruct.B = command.TestFlag(0, 22);
-                dataMoveinstruct.W = command.TestFlag(0, 21);
-                dataMoveinstruct.L = command.TestFlag(0, 20);
-                
-
-                dataMoveinstruct.shiftOp = new ShifterOperand(command);
-
-            }
-
-
-
-
-            return dataMoveinstruct;
-
-
-        }
-
-
-        public Instruction parseDataManipulation(Memory command) 
-        {
-
-            //Get S Byte
-            I = command.TestFlag(0, 25);
-            S = command.TestFlag(0, 20);
-            bit4 = command.TestFlag(0, 4);
-            bit7 = command.TestFlag(0, 7);
-            dataManipulation dataManinstruct = new dataManipulation();
-
-            if (!(!I && bit4 && bit7))
-            {
-                //it's data man
-
-                //get OpCode
-                uint c = command.ReadWord(0);
-                dataManinstruct.opcode = (uint)((c & 0x01E00000) >> 21);
-                dataManinstruct.I = I;
-                dataManinstruct.shiftOp = new ShifterOperand(command);
-
-                return dataManinstruct;
-
-            }
-            //it's a multpiply
-
-            return dataManinstruct;
-
-
-        }
 
     }
 

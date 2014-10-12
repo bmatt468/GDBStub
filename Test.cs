@@ -188,7 +188,7 @@ namespace GDBStub
                     //put the instruction into memory
 
                     Logger.Instance.writeLog("TEST: mov r2, #48 : 0xe3a02030");
-                    this.runDataManCommand(0xe3a02030);
+                    this.runCommand(0xe3a02030);
 
                     Debug.Assert(reg[2].ReadWord(0) == 48);
                     Logger.Instance.writeLog("TEST: Executed");
@@ -197,7 +197,7 @@ namespace GDBStub
                     Logger.Instance.writeLog("TEST: mov r0, r3 : 0xe1a00003");
                     reg[3].WriteWord(0, 3);
 
-                    this.runDataManCommand(0xe1a00003);
+                    this.runCommand(0xe1a00003);
                     
                     Debug.Assert(reg[0].ReadWord(0) == 3);
                     Logger.Instance.writeLog("TEST: Executed");
@@ -205,12 +205,55 @@ namespace GDBStub
                     Logger.Instance.writeLog("TEST: mov r0, r3 lsl #4 : 0xe1a00403");
                     reg[3].WriteWord(0, 3);
         
-                    this.runDataManCommand(0xe1a00403);
+                    this.runCommand(0xe1a00403);
                   
                     Debug.Assert(reg[0].ReadWord(0) == 0x300);
                     Logger.Instance.writeLog("TEST: Executed");
 
+                    //test 0xe28db004 add r9, r8, #4
+                    reg[8].WriteWord(0, 10);
+                    this.runCommand(0xe2889004);
 
+                    Debug.Assert(reg[9].ReadWord(0) == 14);
+                    Logger.Instance.writeLog("TEST: Add");
+
+                    //test 0xe24dd008 sub r13, r13, #8
+                    reg[13].WriteWord(0, 10);
+                    this.runCommand(0xe24dd008);
+                    Debug.Assert(reg[13].ReadWord(0) == 2);
+                    Logger.Instance.writeLog("TEST: Sub");
+
+                    //test 0xeb000006 bxl 6;
+
+                    reg[15].WriteWord(0, 0);
+                    reg[14].WriteWord(0, 48);
+                    this.runCommand(0xeb000006);
+                    Debug.Assert(reg[15].ReadWord(0) == 24);
+                    Debug.Assert(reg[14].ReadWord(0) == 0);
+                    Logger.Instance.writeLog("TEST: Branch");
+
+
+
+                    //test 0xe92d4800 strm r1, r14, r11 U = 0 P = 1 W = 1
+                    reg[14].WriteWord(0, 0x48);
+                    reg[11].WriteWord(0, 0x4F3);
+                    reg[1].WriteWord(0, 0x20);
+                    this.runCommand(0xe9214800);
+
+                    Debug.Assert(RAM.ReadWord(0x18) == 0x48);
+                    Debug.Assert(RAM.ReadWord(0x1c) == 0x4F3);
+                    Debug.Assert(reg[1].ReadWord(0) == 24);
+
+                    //test 0xe88d4800 strm r13, r14, r11 U = 1 P = 0 W = 0
+                    reg[14].WriteWord(0, 0x48);
+                    reg[11].WriteWord(0, 0x4F3);
+                    reg[1].WriteWord(0, 0x20);
+                    this.runCommand(0xe8814800);
+
+                    Debug.Assert(RAM.ReadWord(0x20) == 0x4f3);
+                    Debug.Assert(RAM.ReadWord(0x24) == 0x48);
+                    Debug.Assert(reg[1].ReadWord(0) == 0x20);
+                    Logger.Instance.writeLog("TEST: Store Multiple");
 
                     Logger.Instance.writeLog("TEST: All Decode/Execute Tests Passed");
 
@@ -218,7 +261,7 @@ namespace GDBStub
  
                 }
 
-        private void runDataManCommand(uint p)
+        private void runCommand(uint p)
         {
             RAM.WriteWord(0, p);
 
@@ -236,7 +279,7 @@ namespace GDBStub
 
             //decode the uint!
             Instruction cookedInstruction = cpu.decode(rawInstruction);
-            Debug.Assert(cookedInstruction is dataManipulation);
+           // Debug.Assert(cookedInstruction is dataManipulation);
             Logger.Instance.writeLog("TEST: Decoded");
 
             //exeucte the decoded Command!!

@@ -137,12 +137,14 @@ namespace GDBStub
                     {
                         if (command.L)
                         {
-                            RAM.WriteWord((uint)RnVal, reg[i].ReadWord(0));
+                            reg[i].WriteWord(0, RAM.ReadWord((uint)RnVal));
+
                             Scom = "ldm";
                         }
                         else
                         {
-                            reg[i].WriteWord(0, RAM.ReadWord((uint)RnVal));
+                            RAM.WriteWord((uint)RnVal, reg[i].ReadWord(0));
+
                             Scom = "stm";
                         }
                         RnVal += incrementer;
