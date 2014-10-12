@@ -119,10 +119,17 @@ namespace GDBStub
             //if address is not divisible by 4 escape
             if (addr % 4 == 0)
             {
-                output += (uint)(theArray[addr + 3] << 24);
-                output += (uint)(theArray[addr + 2] << 16);
-                output += (uint)(theArray[addr + 1] << 8);
-                output += (uint)(theArray[addr]);
+                try
+                {
+                    output += (uint)(theArray[addr + 3] << 24);
+                    output += (uint)(theArray[addr + 2] << 16);
+                    output += (uint)(theArray[addr + 1] << 8);
+                    output += (uint)(theArray[addr]);
+                }
+                catch
+                {
+
+                }
 
                 //output = BitConverter.ToUInt32(theArray, addr);
             }

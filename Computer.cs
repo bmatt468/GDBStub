@@ -519,6 +519,7 @@ namespace GDBStub
                                 step_number++;
                                 incrementPC();
                                 Logger.Instance.writeTrace(this);
+                                Logger.Instance.writeLog("\n\n");
 
                             }
                             else

@@ -49,6 +49,9 @@ namespace GDBStub
                     {
                         //loaded and wants to be executed.
                         Computer.Instance.run();
+                        while (Computer.Instance.getThreadStatus()) { ;}
+                        System.Environment.Exit(0);
+
                     }
                 }
 

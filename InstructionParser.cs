@@ -67,13 +67,20 @@ namespace GDBStub
                     break;
                 case 2:
                     //10
-                    //load store multiple
                     if (!command.TestFlag(0, 25))
                     {
+                        //load store multiple
                         instruct = parseLoadStoreMultiple(command);
                     }
+                    else
+                    {
+                        if (command.TestFlag(0, 25) && command.TestFlag(0, 27) && !command.TestFlag(0, 26))
+                        {
+                            //branch command.
+                            instruct = parseBranch(command);
+                        }
+                    }
                     // branch with link
-                   // instruct = parseLoadStoreMultiple(command);
                     break;
                 case 3:
                     //11
@@ -93,6 +100,16 @@ namespace GDBStub
             instruct.rn = (uint)((command.ReadWord(0) & 0x000F0000) >> 16);
             instruct.rd = (uint)((command.ReadWord(0) & 0x0000F000) >> 12);
             return instruct; 
+
+        }
+
+        private Instruction parseBranch(Memory command)
+        {
+            Branch branch = new Branch();
+            branch.LN = command.TestFlag(0, 24);
+            branch.offset = ((int)command.ReadWord(0) & 0x00FFFFFF) << 2;
+
+            return branch;
 
         }
 

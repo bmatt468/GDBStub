@@ -81,8 +81,30 @@ namespace GDBStub
                 return;
             }
 
+            if (command is Branch)
+            {
+                runBranch((Branch)command);
+                return;
+            }
 
-            Logger.Instance.writeLog("\n\n");
+        }
+
+        private void runBranch(Branch command)
+        {
+            if (command.cond == 0xE)
+            {
+                uint curAddr = reg[15].ReadWord(0);
+
+                if(command.LN)
+                {
+                    //store a return address
+                    reg[14].WriteWord(0, curAddr);
+                }
+                uint newAddress = (uint)(curAddr + command.offset);
+                reg[15].WriteWord(0, newAddress);
+
+                Logger.Instance.writeLog(string.Format("CMD: BX 0x{0} : 0x{1}", newAddress, Convert.ToString(command.originalBits, 16)));
+            }
         }
 
         private void runLoadStoreMultiple(dataMoveMultiple command)
@@ -143,7 +165,7 @@ namespace GDBStub
                     reg[command.rn].WriteWord(0, n);
                 }
                 
-            Logger.Instance.writeLog(string.Format("CMD: r{0} {1}, {2}",Scom, command.rn, registers));
+            Logger.Instance.writeLog(string.Format("CMD: {0} r{1}, {2}",Scom, command.rn, registers));
             }//if E
 
 
@@ -154,82 +176,53 @@ namespace GDBStub
             Logger.Instance.writeLog(string.Format("CMD: Data Movement : 0x{0}", Convert.ToString(command.originalBits, 16)));
             if (command.cond == 0xE)
             {
-                switch (command.L)
+                //from register info to memory!!!
+                // --->
+                uint RdValue = reg[command.rd].ReadWord(0);
+                uint RnValue = reg[command.rn].ReadWord(0);
+                uint RmValue = reg[command.rm].ReadWord(0);
+
+                command.shiftOp = loadStoreShift(command.R, command.shiftOp, RmValue);
+                //addressing mode
+                uint addr = figureOutAddressing(command);
+                string cmd = "";
+                if (command.L)
                 {
-                    case true:
-                        //load
-                        this.load(command);
-                        break;
-                    case false:
-                        //store
-                        this.store(command);
-                        break;
-                    default:
-                        break;
+                    cmd = "ldr";
+                    if (command.B)
+                    {
+                        byte inpu = RAM.ReadByte(addr);
+                        //clear it out first
+                        reg[command.rd].WriteWord(0, 0);
+
+                        reg[command.rd].WriteByte(0, inpu);
+
+                    }
+                    else
+                    {
+                        uint inpu = RAM.ReadWord(addr);
+                        reg[command.rd].WriteWord(0, inpu);
+                    }
                 }
-            }
-        }
+                else
+                {
+                    cmd = "str";
+                    if (command.B)
+                    {
+                        byte inpu = reg[command.rd].ReadByte(0);
+                        RAM.WriteByte(addr, inpu);
+                    }
+                    else
+                    {
+                        RAM.WriteWord(addr, RdValue);
+                    }
+                }
 
-        private void store(dataMovement command)
-        {
-            //from register info to memory!!!
-            // --->
-            uint RdValue = reg[command.rd].ReadWord(0);
-            uint RnValue = reg[command.rn].ReadWord(0);
-            uint RmValue = reg[command.rm].ReadWord(0);
-            
-            command.shiftOp = loadStoreShift(command.R, command.shiftOp, RmValue);
-            //addressing mode
-            uint addr = figureOutAddressing(command);
-
-            if(command.B)
-            {
-                byte inpu = reg[command.rd].ReadByte(0); 
-                RAM.WriteByte(addr, inpu);
-            }
-            else
-            {
-                RAM.WriteWord(addr, RdValue);
+                Logger.Instance.writeLog(string.Format("CMD: {0} {1}, 0x{2} : 0x{3} ", cmd, RdValue,
+                    Convert.ToString(addr, 16), Convert.ToString(command.originalBits, 16)));
             }
 
 
-            Logger.Instance.writeLog(string.Format("CMD: str {0}, 0x{1} : ", RdValue, 
-                Convert.ToString(addr, 16), Convert.ToString(command.originalBits, 16)));
-            
-        }
-
-        private void load(dataMovement command)
-        {
-            //from memory info to register!!!
-            // <---
-            uint RdValue = reg[command.rd].ReadWord(0);
-            uint RnValue = reg[command.rn].ReadWord(0);
-            uint RmValue = reg[command.rm].ReadWord(0);
-
-            command.shiftOp = loadStoreShift(command.R, command.shiftOp, RmValue);
-            //addressing mode
-
-            
-            uint addr = figureOutAddressing(command);
-           
-            if (command.B)
-            {
-                byte inpu = RAM.ReadByte(addr);
-                //clear it out first
-                reg[command.rd].WriteWord(0, 0);
-
-                reg[command.rd].WriteByte(0, inpu);
-                
-            }
-            else
-            {
-                uint inpu = RAM.ReadWord(addr);
-                reg[command.rd].WriteWord(0, inpu);
-            }
-
-
-            Logger.Instance.writeLog(string.Format("CMD: ldr {0}, 0x{1}", RdValue, Convert.ToString(addr, 16)));
-            
         }
 
         private uint figureOutAddressing(dataMovement command)
@@ -336,6 +329,15 @@ namespace GDBStub
 
         }
 
+        private void add(dataManipulation dman)
+        {
+            dman.shiftOp = figureOutShift(dman.I, dman.shiftOp, reg[dman.shiftOp.Rm].ReadWord(0));
+            uint RnValue = reg[dman.rn].ReadWord(0);
+            reg[dman.rd].WriteWord(0, (RnValue + dman.shiftOp.offset));
+            Logger.Instance.writeLog(String.Format("CMD: ADD {0},{1},{2} : 0x{3}",
+                dman.rd, dman.rn, dman.shiftOp.offset, Convert.ToString(dman.originalBits, 16)));
+        }
+
         private void runOpcode(dataManipulation dman)
         {
             Logger.Instance.writeLog(string.Format("CMD: Data Manipulation 0x{0}", Convert.ToString(dman.originalBits, 16)));
@@ -356,6 +358,7 @@ namespace GDBStub
                     case 3: //RSB
                         break;
                     case 4: //ADD
+                        this.add(dman);
                         break;
                     case 5: //ADC
                         break;
