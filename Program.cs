@@ -37,12 +37,19 @@ namespace GDBStub
                     
                 }
 
+                Logger.Instance.openTrace();
+
                 // pre-loads a file
                 if (Option.Instance.getFile() != "")
                 {
                     //wanted some data to play with
                     //specified through command line, load the file
                     Computer.Instance.load(Option.Instance.getFile(), Option.Instance.getMemSize());
+                    if (Option.Instance.execute == true)
+                    {
+                        //loaded and wants to be executed.
+                        Computer.Instance.run();
+                    }
                 }
 
                 // listens for gdb connection

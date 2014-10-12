@@ -22,7 +22,8 @@ namespace GDBStub
             ;
         }
 
-
+        
+        public uint rm { get; set; }
     }
 
 
@@ -81,9 +82,9 @@ namespace GDBStub
 
     }
 
-    class dataMoveMultiple : Instruction
+    class dataMoveMultiple : dataMovement
     {
-
+        public bool[] regFlags { get; set; }
     }
 
     class CoProcessorInstruction : Instruction

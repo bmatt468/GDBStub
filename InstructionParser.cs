@@ -29,40 +29,49 @@ namespace GDBStub
             //Check special cases
 
             //Get the conditional
-            instruct.cond = (uint)command.ReadByte(3) >> 4;
 
             //get the type number
-            instruct.type = (uint)((command.ReadByte(3) & 0x0c) >> 2);
+            this.type = (uint)((command.ReadByte(3) & 0x0c) >> 2);
             //Get immediate value or not.
             //get the RN register
             
 
 
             //switches based on type
-            switch (instruct.type)
+            switch (this.type)
             {
                 case 0:
                     //data manipulation 00
 
 
                     instruct = parseDataManipulation(command);
-                    instruct.rn = (uint)((command.ReadHalfWord(2) & 0x0F));
-                    instruct.rd = (uint)(((command.ReadHalfWord(0) & 0xF000) >> 12));
-                    instruct.cond = (uint)command.ReadByte(3) >> 4;
-                    instruct.type = (uint)((command.ReadByte(3) & 0x0c) >> 2);
-                    instruct.originalBits = (uint)command.ReadWord(0);
+
 
                     break;
                 case 1:
                     //ldr/str 01
                     // check the PUBWL 
+                    if (command.TestFlag(0, 24) || !command.TestFlag(0, 21))
+                    {
+                        instruct = parseLoadStore(command);
+                        instruct.rm = (uint)((command.ReadWord(0) & 0xF));
+   
 
-                    parseLoadStore(command);
+                    }
+                    else
+                    {
+                        //unpredictable
+                    }
+
 
                     break;
                 case 2:
                     //10
                     //load store multiple
+                    if (!command.TestFlag(0, 25))
+                    {
+                        instruct = parseLoadStoreMultiple(command);
+                    }
                     // branch with link
                    // instruct = parseLoadStoreMultiple(command);
                     break;
@@ -78,32 +87,60 @@ namespace GDBStub
                     break;
             }
 
-        
+            instruct.cond = (uint)command.ReadByte(3) >> 4;
+            instruct.type = (uint)((command.ReadByte(3) & 0x0c) >> 2);
+            instruct.originalBits = (uint)command.ReadWord(0);
+            instruct.rn = (uint)((command.ReadWord(0) & 0x000F0000) >> 16);
+            instruct.rd = (uint)((command.ReadWord(0) & 0x0000F000) >> 12);
             return instruct; 
 
         }
 
-        private void parseLoadStoreMultiple(Memory command)
+        private Instruction parseLoadStoreMultiple(Memory command)
         {
+            dataMoveMultiple DMultiple = new dataMoveMultiple();
+            DMultiple.regFlags = new bool[16];
+            for (byte i = 0; i < 16; ++i)
+            {
+                DMultiple.regFlags[i] = command.TestFlag(0, i);
+            }
 
-            ;
+
+            return DMultiple;
+            
         }
 
-        private void parseLoadStore(Memory command)
+        public Instruction parseLoadStore(Memory command)
         {
             //PUBWL
             bool R = command.TestFlag(0, 25);
-            P = command.TestFlag(0, 24);
-            U = command.TestFlag(0, 23);
-            B = command.TestFlag(0, 22);
-            W = command.TestFlag(0, 21);
-            L = command.TestFlag(0, 20);
+            
+
+            dataMovement dataMoveinstruct = new dataMovement();
+            if (!(command.TestFlag(0, 25) && command.TestFlag(0, 4)))
+            {
+                dataMoveinstruct.R = command.TestFlag(0, 25); ;
+                dataMoveinstruct.P = command.TestFlag(0, 24);
+                dataMoveinstruct.U = command.TestFlag(0, 23);
+                dataMoveinstruct.B = command.TestFlag(0, 22);
+                dataMoveinstruct.W = command.TestFlag(0, 21);
+                dataMoveinstruct.L = command.TestFlag(0, 20);
+                
+
+                dataMoveinstruct.shiftOp = new ShifterOperand(command);
+
+            }
+
+
+
+
+            return dataMoveinstruct;
 
 
         }
 
 
-        Instruction parseDataManipulation(Memory command) 
+        public Instruction parseDataManipulation(Memory command) 
         {
 
             //Get S Byte
@@ -122,12 +159,6 @@ namespace GDBStub
                 dataManinstruct.opcode = (uint)((c & 0x01E00000) >> 21);
                 dataManinstruct.I = I;
                 dataManinstruct.shiftOp = new ShifterOperand(command);
-                
-
-
-
-
-
 
                 return dataManinstruct;
 

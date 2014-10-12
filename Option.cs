@@ -34,6 +34,7 @@ namespace GDBStub
 
 
         //-----------------Getters
+        public bool  execute { get; set; }
         public string getFile()
         {
             return file;
@@ -105,6 +106,9 @@ namespace GDBStub
                         break;
                     case "--debug":
                         debugFlag = true;
+                        break;
+                    case "--exec":
+                        execute = true;
                         break;
                     default:
                         //this can be the helper instructions

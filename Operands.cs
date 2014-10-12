@@ -12,6 +12,7 @@ namespace GDBStub
     class ShifterOperand
     {
         public uint rotate_imm { get; set; }
+        public uint immed_12 { get; set; }
         public uint immed_8 { get; set; }
         public uint shiftType { get; set; }
         public uint Rm { get; set; }
@@ -39,7 +40,10 @@ namespace GDBStub
             else
             {
                 //it's a register!!!
+                // or it's a load store immediate
                 //this is set here but done in execute
+                immed_12 = (command.ReadWord(0) & 0x00000FFF);
+
                 if (command.TestFlag(0, 4))
                 {
                     bit4 = true;

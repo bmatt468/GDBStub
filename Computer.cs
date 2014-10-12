@@ -221,8 +221,7 @@ namespace GDBStub
                // Logger.Instance.writeLog(String.Format("RAM: Info = {0}", Convert.ToString(x[i],16)));
             }
             Logger.Instance.writeLog(string.Format("RAM: Wrote info to MEM at {0}", Convert.ToString(baseAddr,16)));
-
-
+            reg[13].WriteWord(0, 0x7000);
 
         }
 
@@ -354,6 +353,7 @@ namespace GDBStub
                 Logger.Instance.writeLog("Err: Something went wrong");
                 
             }
+            reg[13].WriteWord(0, 0x7000);
             return output;
 
         }
@@ -414,7 +414,7 @@ namespace GDBStub
             //reset logic
             this.CLEAR();
             readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
-
+            reg[13].WriteWord(0, 0x7000);
             step_number = 0;
             Logger.Instance.writeLog("***** Reset *****\n");
         }
@@ -518,6 +518,8 @@ namespace GDBStub
 
                                 step_number++;
                                 incrementPC();
+                                Logger.Instance.writeTrace(this);
+
                             }
                             else
                             {
@@ -530,11 +532,14 @@ namespace GDBStub
                                 compStatus = breakedStatus;
                                 Logger.Instance.writeLog("COMP: Stopped");
                                 Logger.Instance.writeLog(string.Format("BREAK: Hit a BreakPoint at step# {0}", step_number));
+                                Logger.Instance.writeTrace(this);
                                 return;
                             }
                         }else
                         {
                             //finished
+                            Logger.Instance.writeTrace(this);
+
                             is_running = false;
                             Logger.Instance.writeLog("COMP: Finished");
 
@@ -549,7 +554,7 @@ namespace GDBStub
                         }
 
                     //write to the trace log...
-                    Logger.Instance.writeTrace(this);
+                    
                     
                 } while (is_running);
                 //SO5

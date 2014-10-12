@@ -119,7 +119,12 @@ namespace GDBStub
             //if address is not divisible by 4 escape
             if (addr % 4 == 0)
             {
-                output = BitConverter.ToUInt32(theArray, (int)addr);
+                output += (uint)(theArray[addr + 3] << 24);
+                output += (uint)(theArray[addr + 2] << 16);
+                output += (uint)(theArray[addr + 1] << 8);
+                output += (uint)(theArray[addr]);
+
+                //output = BitConverter.ToUInt32(theArray, addr);
             }
             return output;
         }//ReadWord
@@ -130,7 +135,8 @@ namespace GDBStub
             //if address is not divisible by 4 escape
             if (addr % 2 == 0)
             {
-                output = BitConverter.ToUInt16(theArray, (int)addr);
+                output += (ushort)(theArray[addr + 1] << 8);
+                output += (ushort)(theArray[addr]);
             }
             return output;
         }//ReadHalfWord

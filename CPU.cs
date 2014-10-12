@@ -66,22 +66,279 @@ namespace GDBStub
             if (command is dataManipulation)
             {
                 runOpcode((dataManipulation)command);
+                return;
+            }
+
+            if (command is dataMoveMultiple)
+            {
+                runLoadStoreMultiple((dataMoveMultiple)command);
+                return;
+            }
+
+            if (command is dataMovement)
+            {
+                runLoadStore((dataMovement)command);
+                return;
+            }
+
+
+            Logger.Instance.writeLog("\n\n");
+        }
+
+        private void runLoadStoreMultiple(dataMoveMultiple command)
+        {
+            Logger.Instance.writeLog(string.Format("CMD: Data Move Multiple : 0x{0}", Convert.ToString(command.originalBits,16)));
+            if (command.cond == 0XE)
+            {
+                int RnVal = (int)reg[command.rn].ReadWord(0);
+                int incrementer = 4;
+                uint numReg = 0;
+                if (command.U)
+                {
+                    incrementer = 4;
+                }
+                else
+                {
+                    incrementer = -4;
+                }
+
+                if (command.P)
+                {
+                    //RnVal excluded
+                    RnVal += incrementer;
+                }
+                string Scom = "";
+                string registers = "";
+                for (int i = 0; i < 16; ++i)
+                {
+                    if (command.regFlags[i])
+                    {
+                        if (command.L)
+                        {
+                            RAM.WriteWord((uint)RnVal, reg[i].ReadWord(0));
+                            Scom = "ldm";
+                        }
+                        else
+                        {
+                            reg[i].WriteWord(0, RAM.ReadWord((uint)RnVal));
+                            Scom = "stm";
+                        }
+                        RnVal += incrementer;
+                        registers += string.Format("r{0}, ", i);
+                        ++numReg;
+                    }
+                }
+
+                if (command.W)
+                {
+                    uint n;
+                    if (command.U)
+                    {
+                        n = reg[command.rn].ReadWord(0) + (4 * numReg);
+                    }
+                    else
+                    {
+                        n = reg[command.rn].ReadWord(0) - (4 * numReg);
+                    }
+                    reg[command.rn].WriteWord(0, n);
+                }
+                
+            Logger.Instance.writeLog(string.Format("CMD: r{0} {1}, {2}",Scom, command.rn, registers));
+            }//if E
+
+
+        }//LoadMultStoreMult
+
+        private void runLoadStore(dataMovement command)
+        {
+            Logger.Instance.writeLog(string.Format("CMD: Data Movement : 0x{0}", Convert.ToString(command.originalBits, 16)));
+            if (command.cond == 0xE)
+            {
+                switch (command.L)
+                {
+                    case true:
+                        //load
+                        this.load(command);
+                        break;
+                    case false:
+                        //store
+                        this.store(command);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        private void store(dataMovement command)
+        {
+            //from register info to memory!!!
+            // --->
+            uint RdValue = reg[command.rd].ReadWord(0);
+            uint RnValue = reg[command.rn].ReadWord(0);
+            uint RmValue = reg[command.rm].ReadWord(0);
+            
+            command.shiftOp = loadStoreShift(command.R, command.shiftOp, RmValue);
+            //addressing mode
+            uint addr = figureOutAddressing(command);
+
+            if(command.B)
+            {
+                byte inpu = reg[command.rd].ReadByte(0); 
+                RAM.WriteByte(addr, inpu);
+            }
+            else
+            {
+                RAM.WriteWord(addr, RdValue);
+            }
+
+
+            Logger.Instance.writeLog(string.Format("CMD: str {0}, 0x{1} : ", RdValue, 
+                Convert.ToString(addr, 16), Convert.ToString(command.originalBits, 16)));
+            
+        }
+
+        private void load(dataMovement command)
+        {
+            //from memory info to register!!!
+            // <---
+            uint RdValue = reg[command.rd].ReadWord(0);
+            uint RnValue = reg[command.rn].ReadWord(0);
+            uint RmValue = reg[command.rm].ReadWord(0);
+
+            command.shiftOp = loadStoreShift(command.R, command.shiftOp, RmValue);
+            //addressing mode
+
+            
+            uint addr = figureOutAddressing(command);
+           
+            if (command.B)
+            {
+                byte inpu = RAM.ReadByte(addr);
+                //clear it out first
+                reg[command.rd].WriteWord(0, 0);
+
+                reg[command.rd].WriteByte(0, inpu);
+                
+            }
+            else
+            {
+                uint inpu = RAM.ReadWord(addr);
+                reg[command.rd].WriteWord(0, inpu);
+            }
+
+
+            Logger.Instance.writeLog(string.Format("CMD: ldr {0}, 0x{1}", RdValue, Convert.ToString(addr, 16)));
+            
+        }
+
+        private uint figureOutAddressing(dataMovement command)
+        {
+
+            uint RdValue = reg[command.rd].ReadWord(0);
+            uint RnValue = reg[command.rn].ReadWord(0);
+            uint addr = 0;
+            if (command.P)
+            {
+                if (command.U)
+                {
+                    addr = RnValue + command.shiftOp.offset;
+                }
+                else
+                {
+                    //will be subtraction later
+                    addr = RnValue + command.shiftOp.offset;
+                }
+
+                //offset addressing
+                if (command.W)
+                {
+                    //pre-indexed
+                    reg[command.rn].WriteWord(0, addr);
+                }
 
             }
             else
             {
-                if (command is dataMovement)
+                //post-indexed addressing
+                addr = RnValue;
+                if (command.U)
                 {
-
+                    reg[command.rn].WriteWord(0, RnValue + command.shiftOp.offset);
+                }
+                else
+                {
+                    reg[command.rn].WriteWord(0, RnValue - command.shiftOp.offset);
                 }
             }
-
+            return addr;
         }
 
 
+        public ShifterOperand loadStoreShift(bool R, ShifterOperand shiftOp, uint RmValue)
+        {
+            if (R)
+            {
+                //it's a register
+                shiftOp = figureOutShift(!R, shiftOp, RmValue);
+            }
+            else
+            {
+                //it's an immediate 12 bit value
+                shiftOp.offset = shiftOp.immed_12;
+            }
+
+            return shiftOp;
+        }
+
+        public ShifterOperand figureOutShift(bool I, ShifterOperand shiftOp, uint RmVal)
+        {
+            if (!I)
+            {
+                //it's a register!
+                if (shiftOp.bit4 && !shiftOp.bit7)
+                {
+                    //shifted by a register!
+                    shiftOp.shiftRM(RmVal, reg[shiftOp.Rs].ReadWord(0));
+
+                }
+                else
+                {
+                    //shifted by an immediate value!
+                    shiftOp.shiftRM(RmVal, shiftOp.shift_imm);
+                }
+            }
+            return shiftOp;
+        }
+
+
+
+        private void mov(dataManipulation dman)
+        {
+            
+            dman.shiftOp = figureOutShift(dman.I, dman.shiftOp, reg[dman.shiftOp.Rm].ReadWord(0));
+           
+            reg[dman.rd].WriteWord(0, dman.shiftOp.offset);
+            Logger.Instance.writeLog(String.Format("CMD: mov {0},{1} : 0x{2}",
+                dman.rd,dman.shiftOp.offset, Convert.ToString(dman.originalBits,16)));
+        }
+
+
+
+
+        private void sub(dataManipulation dman)
+        {
+            dman.shiftOp = figureOutShift(dman.I, dman.shiftOp, reg[dman.shiftOp.Rm].ReadWord(0));
+            uint RnValue = reg[dman.rn].ReadWord(0);
+            reg[dman.rd].WriteWord(0, (RnValue - dman.shiftOp.offset));
+            Logger.Instance.writeLog(String.Format("CMD: sub {0},{1},{2} : 0x{3}",
+                dman.rd, dman.rn, dman.shiftOp.offset, Convert.ToString(dman.originalBits, 16)));
+
+        }
+
         private void runOpcode(dataManipulation dman)
         {
-            Logger.Instance.writeLog("CMD: Data Manipulation");
+            Logger.Instance.writeLog(string.Format("CMD: Data Manipulation 0x{0}", Convert.ToString(dman.originalBits, 16)));
 
             //if always DO IT!
             if (dman.cond == 0xE)
@@ -131,50 +388,7 @@ namespace GDBStub
             }//if
         }
 
-        private void setshiftOffset(ref dataManipulation dman)
-        {
-            uint RmVal = reg[dman.shiftOp.Rm].ReadWord(0);
-            if (!dman.I)
-            {
-                //it's a register!
-                if (dman.shiftOp.bit4 && !dman.shiftOp.bit7)
-                {
-                    //shifted by a register!
-                    dman.shiftOp.shiftRM(RmVal, reg[dman.shiftOp.Rs].ReadWord(0));
 
-                }
-                else
-                {
-                    //shifted by an immediate value!
-                    dman.shiftOp.shiftRM(RmVal, dman.shiftOp.shift_imm);
-                }
-            }
-        }
-
-
-        private void mov(dataManipulation dman)
-        {
-            
-            this.setshiftOffset(ref dman);
-            
-            
-            reg[dman.rd].WriteWord(0, dman.shiftOp.offset);
-            Logger.Instance.writeLog(String.Format("CMD: mov {0},{1} : 0x{2}",
-                dman.rd,dman.shiftOp.offset, Convert.ToString(dman.originalBits,16)));
-        }
-
-
-
-
-        private void sub(dataManipulation dman)
-        {
-            this.setshiftOffset(ref dman);
-            uint RnValue = reg[dman.rn].ReadWord(0);
-            reg[dman.rd].WriteWord(0, (RnValue - dman.shiftOp.offset));
-            Logger.Instance.writeLog(String.Format("CMD: sub {0},{1},{2} : 0x{3}",
-                dman.rd, dman.rn, dman.shiftOp.offset, Convert.ToString(dman.originalBits, 16)));
-
-        }
 
     }
 }

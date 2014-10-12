@@ -32,6 +32,7 @@ namespace GDBStub
             string hash = "3500a8bef72dfed358b25b61b7602cf1";
 
             Debug.Assert(hash.ToUpper() == resultHash);
+            /*
             Logger.Instance.writeLog("Test: Testing BreakPoint");
 
             uint bPoint = comp.getReg(15).ReadWord(0) + 8;
@@ -39,7 +40,7 @@ namespace GDBStub
             
             comp.step();
             comp.step();
-
+            
             //System.Threading.Thread.Sleep(10000);
             Logger.Instance.writeLog("Test: Hit Break Point");
             Debug.Assert(comp.compStatus.statchar == 'S');
@@ -58,6 +59,7 @@ namespace GDBStub
             Debug.Assert(comp.compStatus.statchar == 'W');
             Debug.Assert(comp.compStatus.statval == "00");
             Logger.Instance.writeLog("Test: Removed Break Point");
+             */
 
             comp.CLEAR();
 
