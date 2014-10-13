@@ -235,18 +235,19 @@ namespace GDBStub
 
 
                     //test 0xe92d4800 strm r1, r14, r11 U = 0 P = 1 W = 1
-                    reg[14].WriteWord(0, 0x48);
                     reg[11].WriteWord(0, 0x4F3);
+                    reg[14].WriteWord(0, 0x48);
                     reg[1].WriteWord(0, 0x20);
                     this.runCommand(0xe9214800);
 
-                    Debug.Assert(RAM.ReadWord(0x18) == 0x48);
-                    Debug.Assert(RAM.ReadWord(0x1c) == 0x4F3);
+            //lower register is always lower in memory
+                    Debug.Assert(RAM.ReadWord(0x18) == 0x4F3);
+                    Debug.Assert(RAM.ReadWord(0x1c) == 0x48);
                     Debug.Assert(reg[1].ReadWord(0) == 24);
 
                     //test 0xe88d4800 strm r13, r14, r11 U = 1 P = 0 W = 0
-                    reg[14].WriteWord(0, 0x48);
                     reg[11].WriteWord(0, 0x4F3);
+                    reg[14].WriteWord(0, 0x48);
                     reg[1].WriteWord(0, 0x20);
                     this.runCommand(0xe8814800);
 

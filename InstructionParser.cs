@@ -39,9 +39,6 @@ namespace GDBStub
                     //data manipulation 00
 
                     instruct = new dataManipulation();
-                    //instruct = parseDataManipulation(command);
-
-
                     break;
                 case 1:
                     //ldr/str 01
@@ -49,11 +46,6 @@ namespace GDBStub
                     if (command.TestFlag(0, 24) || !command.TestFlag(0, 21))
                     {
                         instruct = new dataMovement();
-
-                        //instruct = parseLoadStore(command);
-                        //instruct.rm = (uint)((command.ReadWord(0) & 0xF));
-   
-
                     }
                     else
                     {
@@ -68,18 +60,15 @@ namespace GDBStub
                     {
                         //load store multiple
                         instruct = new dataMoveMultiple();
-                        //instruct = parseLoadStoreMultiple(command);
                     }
                     else
                     {
-                        if (command.TestFlag(0, 25) && command.TestFlag(0, 27) && !command.TestFlag(0, 26))
+                        if (command.TestFlag(0, 27) && !command.TestFlag(0, 26) && command.TestFlag(0, 25))
                         {
                             //branch command.
                             instruct = new Branch();
-                            //instruct = parseBranch(command);
                         }
                     }
-                    // branch with link
                     break;
                 case 3:
                     //11
