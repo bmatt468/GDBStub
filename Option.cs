@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GDBStub
+namespace Simulator1
 {
 
     //Option Parser is a singleton class. there is one of them that holds the current 

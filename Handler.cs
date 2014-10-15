@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 
-namespace GDBStub
+namespace Simulator1
 {
     
     class Handler

@@ -9,7 +9,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 
 
-namespace GDBStub
+namespace Simulator1
 {
 
     /*
@@ -59,12 +59,22 @@ namespace GDBStub
         }
 
         //executes the actual data by movine registers and stuff
-        public void execute(Instruction command)
+        public bool[] execute(Instruction command, bool[] flagsNZCF)
         {
-        //won't let me do a switch statement so bare with the ifs....
+            
+            if (command.checkCond(flagsNZCF))
+            {
+                command.run(ref reg, ref RAM);
+                /*
+                if (command.S)
+                {
+                    bool[] flags = { command.N, command.Z, command.C, command.F };
+                    return flags;
+                }
+                 */
+            }
 
-
-            command.run(ref reg, ref RAM);
+            return null;
 
         }
 

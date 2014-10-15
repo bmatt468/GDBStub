@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 
 
-namespace GDBStub
+namespace Simulator1
 {
     //the instruction class object
     class InstructionParser
@@ -45,6 +45,7 @@ namespace GDBStub
                     // check the PUBWL 
                     if (command.TestFlag(0, 24) || !command.TestFlag(0, 21))
                     {
+
                         instruct = new dataMovement();
                     }
                     else

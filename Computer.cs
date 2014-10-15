@@ -8,7 +8,7 @@ using System.Security.Cryptography;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace GDBStub
+namespace Simulator1
 {
 
     /*
@@ -35,7 +35,7 @@ namespace GDBStub
         bool is_running = false;
         bool N, Z, C, F = false;
         string checkSum = "";
-        uint step_number = 0;
+        uint step_number = 1;
         Dictionary<uint, uint> storedCommands = new Dictionary<uint,uint>();
 
         Register[] reg = new Register[16];
@@ -68,8 +68,9 @@ namespace GDBStub
             //Logger.Instance.clearLog();
 
             //defines 15 registers, 0 - 15
-            for (int i = 0; i < 16; i++){
+            for (uint i = 0; i < 16; i++){
                 this.reg[i] = new Register();
+                this.reg[i].regID = i;
             }
         
             //activate trace for the first time
@@ -175,7 +176,18 @@ namespace GDBStub
         private bool isBreakPoint(Memory rawInstruction)
         {
             bool output = false;
-            if ((rawInstruction.ReadWord(0) & 0xE1200070) == 0xE1200070)
+            if (!rawInstruction.TestFlag(0,27) &&
+                !rawInstruction.TestFlag(0,26) &&
+                !rawInstruction.TestFlag(0,25) &&
+                rawInstruction.TestFlag(0,24) &&
+                !rawInstruction.TestFlag(0,23) &&
+                !rawInstruction.TestFlag(0,22) &&
+                rawInstruction.TestFlag(0,21) &&
+                !rawInstruction.TestFlag(0,20) &&
+                rawInstruction.TestFlag(0,7) &&
+                !rawInstruction.TestFlag(0,6) &&
+                !rawInstruction.TestFlag(0,5) &&
+                !rawInstruction.TestFlag(0,4))
                 output = true;
             
             return output;
@@ -399,7 +411,7 @@ namespace GDBStub
 
             readELF(file, memSize);
             checkSum = RAM.getHash();
-            step_number = 0;
+            step_number = 1;
             Logger.Instance.writeLog("RAM: Hash is " + RAM.getHash());
         }
 
@@ -415,7 +427,7 @@ namespace GDBStub
             this.CLEAR();
             readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
             reg[13].WriteWord(0, 0x7000);
-            step_number = 0;
+            step_number = 1;
             Logger.Instance.writeLog("***** Reset *****\n");
         }
 
@@ -504,9 +516,12 @@ namespace GDBStub
                 {
                     //fetch, decode, execute commands here
                     Memory rawInstruction = cpu.fetch();
+                    Logger.Instance.writeLog(string.Format("CMD: #{0} = 0x{1}", this.step_number, Convert.ToString(rawInstruction.ReadWord(0), 16)));
                     //break if we fetched a zero!
                     //will change to a finish command like .exit
-                    if (rawInstruction.ReadWord(0) != 0)
+             //       if (rawInstruction.ReadWord(0) != 0)
+                       if ((rawInstruction.ReadWord(0) & 0x0F000000) != 0x0F000000)
+
                         {
                             if (!isBreakPoint(rawInstruction))
                             {
@@ -514,12 +529,22 @@ namespace GDBStub
                                 Instruction cookedInstruction = cpu.decode(rawInstruction);
 
                                 //exeucte the decoded Command!!
-                                cpu.execute(cookedInstruction);
-
-                                step_number++;
-                                incrementPC();
+                                bool[] flags = {N, Z, C, F};
+                                if ((flags = cpu.execute(cookedInstruction, flags)) != null)
+                                {
+                                    this.N = flags[0];
+                                    this.Z = flags[1];
+                                    this.C = flags[2];
+                                    this.F = flags[3];
+                                }
+                                else
+                                {
+                                    Logger.Instance.writeLog("CMD: Flags not updated");
+                                }
                                 Logger.Instance.writeTrace(this);
                                 Logger.Instance.writeLog("\n\n");
+                                step_number++;
+                                incrementPC();
 
                             }
                             else

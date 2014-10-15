@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace GDBStub
+namespace Simulator1
 {
 
 
@@ -35,6 +35,9 @@ namespace GDBStub
                 rotate_imm = (command.ReadWord(0) & 0x00000F00) >> 8;
                 immed_8 = (command.ReadWord(0) & 0x000000FF);
                 offset = RotateRight(immed_8, ((int)rotate_imm * 2));
+                //or it's a load store shift... which is dumb that they did the flag this way...
+                shiftType = (uint)((command.ReadWord(0) & 0x00000060) >> 5);
+                shift_imm = (uint)((command.ReadWord(0) & 0x00000F80) >> 7);
             }// immediate
 
             else
@@ -59,8 +62,8 @@ namespace GDBStub
                     else
                     {
                         // psych it's a multiply!!
-                        //shouold probably catch this case earlier
-                        // do craziness
+                        Rm = (uint)(command.ReadWord(0) & 0x0000000F);
+                        Rs = (uint)((command.ReadWord(0) & 0x00000F00) >> 8);
                     }
                 }
                 else
@@ -105,7 +108,7 @@ namespace GDBStub
                     break;
                 case 3:
                     //ROR ROX
-                   
+                    offset = RotateRight(toBeShifted, (int)shiftedBy);
                     break;
 
                 default:

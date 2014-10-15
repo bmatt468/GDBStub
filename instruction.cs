@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace GDBStub
+namespace Simulator1
 {
     class Instruction
     {
@@ -16,6 +16,9 @@ namespace GDBStub
         public uint type { get; set; }
 
         public bool S { get; set; }
+
+        public bool N, Z, C, F;
+
 
         public Instruction()
         {
@@ -43,7 +46,7 @@ namespace GDBStub
                 if (shiftOp.bit4 && !shiftOp.bit7)
                 {
                     //shifted by a register!
-                    shiftOp.shiftRM(RmVal, reg[shiftOp.Rs].ReadWord(0));
+                    shiftOp.shiftRM(RmVal, reg[shiftOp.Rs].ReadWord(0, true));
 
                 }
                 else
@@ -57,6 +60,71 @@ namespace GDBStub
 
 
 
+        internal bool checkCond(bool[] flagsNZCF)
+        {
+            bool N = flagsNZCF[0];
+            bool Z = flagsNZCF[1];
+            bool C = flagsNZCF[2];
+            bool F = flagsNZCF[3];
+            switch (cond)
+            {
+                case 0x0:
+                    if (Z) { return true; }
+                    break;
+                case 0x1:
+                    if (!Z) { return true; }
+                    break;
+                case 0x2:
+                    if (C) { return true; }
+                    break;
+                case 0x3:
+                    if (!C) { return true; }
+                    break;
+                case 0x4:
+                    if (N) { return true; }
+                    break;
+                case 0x5:
+                    if (!N) { return true; }
+                    break;
+                case 0x6:
+                    if (F) { return true; }
+                    break;
+                case 0x7:
+                    if (!F) { return true; }
+                    break;
+                case 0x8:
+                    if ((C && !F)) { return true; }
+                    break;
+                case 0x9:
+                    if ((!C && F)) { return true; }
+                    break;
+                case 0xa:
+                    if ((N == F)) { return true; }
+                    break;
+                case 0xb:
+                    if ((N != F)) { return true; }
+                    break;
+                case 0xc:
+                    if ((!Z && N == F)) { return true; }
+                    break;
+                case 0xd:
+                    if ((Z || N != F)) { return true; }
+                    break;
+                case 0xe:
+                    return true;
+                    break;
+                case 0xf:
+                    return false;
+                    break;
+                default:
+                    return false;
+                    break;
+            }
+            
+
+
+            return false;
+        }
     }
 
 
@@ -75,11 +143,13 @@ namespace GDBStub
         {
             //PUBWL
             bool R = command.TestFlag(0, 25);
+            rm = (command.ReadWord(0) & 0x0000000F);
+            this.shiftOp = new ShifterOperand(command);
 
 
             if (!(command.TestFlag(0, 25) && command.TestFlag(0, 4)))
             {
-                this.R = command.TestFlag(0, 25); ;
+                this.R = command.TestFlag(0, 25);
                 this.P = command.TestFlag(0, 24);
                 this.U = command.TestFlag(0, 23);
                 this.B = command.TestFlag(0, 22);
@@ -87,7 +157,6 @@ namespace GDBStub
                 this.L = command.TestFlag(0, 20);
 
 
-                this.shiftOp = new ShifterOperand(command);
 
             }
 
@@ -97,13 +166,12 @@ namespace GDBStub
         {
             //base.run(ref reg, ref RAM);
             Logger.Instance.writeLog(string.Format("CMD: Data Movement : 0x{0}", Convert.ToString(this.originalBits, 16)));
-            if (this.cond == 0xE)
-            {
+           
                 //from register info to memory!!!
                 // --->
-                uint RdValue = reg[this.rd].ReadWord(0);
-                uint RnValue = reg[this.rn].ReadWord(0);
-                uint RmValue = reg[this.rm].ReadWord(0);
+                uint RdValue = reg[this.rd].ReadWord(0, true);
+                uint RnValue = reg[this.rn].ReadWord(0, true);
+                uint RmValue = reg[this.rm].ReadWord(0, true);
 
                 this.shiftOp = loadStoreShift(this.R, this.shiftOp, RmValue, reg);
                 //addressing mode
@@ -146,7 +214,7 @@ namespace GDBStub
             }
 
 
-        }
+        
 
 
 
@@ -171,8 +239,8 @@ namespace GDBStub
         private uint figureOutAddressing(ref Register[] reg)
         {
 
-            uint RdValue = reg[this.rd].ReadWord(0);
-            uint RnValue = reg[this.rn].ReadWord(0);
+            uint RdValue = reg[this.rd].ReadWord(0, true);
+            uint RnValue = reg[this.rn].ReadWord(0, true);
             uint addr = 0;
             if (this.P)
             {
@@ -182,8 +250,7 @@ namespace GDBStub
                 }
                 else
                 {
-                    //will be subtraction later
-                    addr = RnValue + this.shiftOp.offset;
+                    addr = RnValue - this.shiftOp.offset;
                 }
 
                 //offset addressing
@@ -216,6 +283,8 @@ namespace GDBStub
 
     class dataManipulation : Instruction
     {
+
+
         public uint opcode { get; set; }
         public bool I { get; set; }
         public ShifterOperand shiftOp { get; set; }
@@ -231,20 +300,26 @@ namespace GDBStub
             this.bit4 = command.TestFlag(0, 4);
             this.bit7 = command.TestFlag(0, 7);
             //dataManipulation dataManinstruct = new dataManipulation();
+            this.shiftOp = new ShifterOperand(command);
 
             if (!(!I && bit4 && bit7))
             {
                 //it's data man
 
                 //get OpCode
-                uint c = command.ReadWord(0);
+                uint c = command.ReadWord(0, true);
                 this.opcode = (uint)((c & 0x01E00000) >> 21);
-                this.shiftOp = new ShifterOperand(command);
-
+                return;
 
             }
-            //it's a multpiply
+            else
+            {
+                //it's a multpiply
+                this.opcode = 0x1F;
 
+                return;
+            }
+            
 
 
         }
@@ -254,20 +329,20 @@ namespace GDBStub
         {
             Logger.Instance.writeLog(string.Format("CMD: Data Manipulation 0x{0}", Convert.ToString(this.originalBits, 16)));
 
-            //if always DO IT!
-            if (this.cond == 0xE)
-            {
                 switch (this.opcode)
                 {
                     case 0:
                         //and
+                        this.and(ref reg, ref RAM);
                         break;
                     case 1: //EOR
+                        this.eor(ref reg, ref RAM);
                         break;
                     case 2: //SUb
                         this.sub(ref reg, ref RAM);
                         break;
                     case 3: //RSB
+                        this.rsb(ref reg, ref RAM);
                         break;
                     case 4: //ADD
                         this.add(ref reg, ref RAM);
@@ -283,43 +358,140 @@ namespace GDBStub
                     case 9: //teq
                         break;
                     case 10: //cmp
+                        this.cmp(ref reg, ref RAM);
                         break;
                     case 11: //cmn
                         break;
                     case 12: //oor
+                        this.oor(ref reg, ref RAM);
                         break;
                     case 13: //mov
                         this.mov(ref reg, ref RAM);
                         break;
                     case 14: //bic
+                        this.bic(ref reg, ref RAM);
                         break;
-                    case 15: //movn
+                    case 15: //mvn
+                        this.mvn(ref reg, ref RAM);
+                        break;
+                    case 0x1F:
+                        this.mul(ref reg, ref RAM);
                         break;
 
                     default:
                         //something bad
                         break;
                 }//switc
-            }//if
+            
+        }
+
+        private void mul(ref Register[] reg, ref Memory RAM)
+        {
+            uint RmValue = reg[this.shiftOp.Rm].ReadWord(0, true);
+            uint RsValue = reg[this.shiftOp.Rs].ReadWord(0, true);
+            uint product = RmValue * RsValue;
+            if (product > 0xFFFFFFFF) { Logger.Instance.writeLog("ERR: Multiply to large"); }
+            reg[this.rn].WriteWord(0, product);
+            Logger.Instance.writeLog(String.Format("CMD: MUL R{0},R{1},R{2} : 0x{3}",
+                this.rd, this.shiftOp.Rm, this.shiftOp.Rs, Convert.ToString(this.originalBits, 16)));
+
+        }   
+
+        private void bic(ref Register[] reg, ref Memory RAM)
+        {
+            this.shiftOp = figureOutShift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
+            uint RnValue = reg[this.rn].ReadWord(0, true);
+
+            reg[this.rd].WriteWord(0, (RnValue & (~ this.shiftOp.offset)));
+
+            Logger.Instance.writeLog(String.Format("CMD: BIC R{0},R{1},{2} : 0x{3}",
+                this.rd, this.rn, this.shiftOp.offset, Convert.ToString(this.originalBits, 16)));
+        }
+
+
+        // This can be refactored
+        //maybe pass in two values in the order you need them and an operator....
+        private void eor(ref Register[] reg, ref Memory RAM)
+        {
+            this.shiftOp = figureOutShift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
+            uint RnValue = reg[this.rn].ReadWord(0, true);
+            reg[this.rd].WriteWord(0, (RnValue ^ this.shiftOp.offset));
+            Logger.Instance.writeLog(String.Format("CMD: EOR R{0},R{1},{2} : 0x{3}",
+                this.rd, this.rn, this.shiftOp.offset, Convert.ToString(this.originalBits, 16)));
+        }
+
+        private void oor(ref Register[] reg, ref Memory RAM)
+        {
+            this.shiftOp = figureOutShift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
+            uint RnValue = reg[this.rn].ReadWord(0, true);
+            reg[this.rd].WriteWord(0, (RnValue | this.shiftOp.offset));
+            Logger.Instance.writeLog(String.Format("CMD: OOR R{0},R{1},{2} : 0x{3}",
+                this.rd, this.rn, this.shiftOp.offset, Convert.ToString(this.originalBits, 16)));
+        }
+
+        private void and(ref Register[] reg, ref Memory RAM)
+        {
+            this.shiftOp = figureOutShift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
+            uint RnValue = reg[this.rn].ReadWord(0, true);
+            reg[this.rd].WriteWord(0, (RnValue & this.shiftOp.offset));
+            Logger.Instance.writeLog(String.Format("CMD: AND R{0},R{1},{2} : 0x{3}",
+                this.rd, this.rn, this.shiftOp.offset, Convert.ToString(this.originalBits, 16)));
+        }
+
+        private void rsb(ref Register[] reg, ref Memory RAM)
+        {
+            this.shiftOp = figureOutShift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
+            uint RnValue = reg[this.rn].ReadWord(0, true);
+            reg[this.rd].WriteWord(0, (this.shiftOp.offset - RnValue));
+            Logger.Instance.writeLog(String.Format("CMD: rsb R{0},R{1},{2} : 0x{3}",
+                this.rd, this.rn, this.shiftOp.offset, Convert.ToString(this.originalBits, 16)));
+        }
+
+        private void mvn(ref Register[] reg, ref Memory RAM)
+        {
+            this.shiftOp = figureOutShift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
+
+            reg[this.rd].WriteWord(0, ~ this.shiftOp.offset);
+            Logger.Instance.writeLog(String.Format("CMD: mvn R{0},{1} : 0x{2}",
+                this.rd, this.shiftOp.offset, Convert.ToString(this.originalBits, 16)));
+        }
+
+        private void cmp(ref Register[] reg, ref Memory RAM)
+        {
+            this.shiftOp = figureOutShift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
+            uint RnVal = reg[this.rn].ReadWord(0, true);
+            uint cmpVal = RnVal - this.shiftOp.offset;
+            Memory alu = new Memory(4);
+            alu.WriteWord(0, cmpVal);
+            //set N flag
+            N = alu.TestFlag(0,31);
+            Z = alu.ReadWord(0, true) == 0;
+            Logger.Instance.writeLog("Fix compare C and V flags");
+            C = false;
+            F = false;
+            Logger.Instance.writeLog(String.Format("CMD: cmp R{0}, {1} : 0x{2}",
+                this.rn, this.shiftOp.offset, Convert.ToString(this.originalBits, 16)));
+   
+
         }
 
 
         public void add(ref Register[] reg, ref Memory RAM)
         {
-            this.shiftOp = figureOutShift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0), reg);
-            uint RnValue = reg[this.rn].ReadWord(0);
+            this.shiftOp = figureOutShift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
+            uint RnValue = reg[this.rn].ReadWord(0, true);
             reg[this.rd].WriteWord(0, (RnValue + this.shiftOp.offset));
-            Logger.Instance.writeLog(String.Format("CMD: ADD {0},{1},{2} : 0x{3}",
+            Logger.Instance.writeLog(String.Format("CMD: ADD R{0},R{1},{2} : 0x{3}",
                 this.rd, this.rn, this.shiftOp.offset, Convert.ToString(this.originalBits, 16)));
         }
 
 
         public void sub(ref Register[] reg, ref Memory RAM)
         {
-            this.shiftOp = figureOutShift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0), reg);
-            uint RnValue = reg[this.rn].ReadWord(0);
+            this.shiftOp = figureOutShift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
+            uint RnValue = reg[this.rn].ReadWord(0, true);
             reg[this.rd].WriteWord(0, (RnValue - this.shiftOp.offset));
-            Logger.Instance.writeLog(String.Format("CMD: sub {0},{1},{2} : 0x{3}",
+            Logger.Instance.writeLog(String.Format("CMD: sub R{0},R{1},{2} : 0x{3}",
                 this.rd, this.rn, this.shiftOp.offset, Convert.ToString(this.originalBits, 16)));
 
         }
@@ -331,10 +503,10 @@ namespace GDBStub
         private void mov(ref Register[] reg, ref Memory RAM)
         {
 
-            this.shiftOp = figureOutShift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0), reg);
+            this.shiftOp = figureOutShift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
 
             reg[this.rd].WriteWord(0, this.shiftOp.offset);
-            Logger.Instance.writeLog(String.Format("CMD: mov {0},{1} : 0x{2}",
+            Logger.Instance.writeLog(String.Format("CMD: mov R{0},{1} : 0x{2}",
                 this.rd, this.shiftOp.offset, Convert.ToString(this.originalBits, 16)));
         }
 
@@ -352,19 +524,15 @@ namespace GDBStub
         public override void parse(Memory command)
         {
             this.LN = command.TestFlag(0, 24);
-            this.offset = ((int)command.ReadWord(0) & 0x00FFFFFF) << 2;
-
-            
-
+            this.offset = ((int)command.ReadWord(0, true) & 0x00FFFFFF) << 2;
         }
 
 
 
         public override void run(ref Register[] reg, ref Memory RAM)
         {
-            if (this.cond == 0xE)
-            {
-                uint curAddr = reg[15].ReadWord(0);
+           
+                uint curAddr = reg[15].ReadWord(0, true);
 
                 if (this.LN)
                 {
@@ -376,7 +544,6 @@ namespace GDBStub
 
                 Logger.Instance.writeLog(string.Format("CMD: BX 0x{0} : 0x{1}", newAddress, Convert.ToString(this.originalBits, 16)));
             }
-        }
 
 
     }
@@ -426,10 +593,8 @@ namespace GDBStub
         public override void run(ref Register[] reg, ref Memory RAM)
         {
             Logger.Instance.writeLog(string.Format("CMD: Data Move Multiple : 0x{0}", Convert.ToString(this.originalBits, 16)));
-            if (this.cond == 0XE)
-            {
-                int RnVal = (int)reg[this.rn].ReadWord(0);
-                int incrementer = 4;
+            
+                int RnVal = (int)reg[this.rn].ReadWord(0, true);
                 uint numReg = 0;
                 string Scom = "";
                 string registers = "";
@@ -457,12 +622,12 @@ namespace GDBStub
                             }
                             else
                             {
-                                RAM.WriteWord((uint)RnVal, reg[i].ReadWord(0));
+                                RAM.WriteWord((uint)RnVal, reg[i].ReadWord(0, true));
 
                                 Scom = "stm";
                             }
                             RnVal += 4;
-                            registers += string.Format("r{0}, ", i);
+                            registers += string.Format(", r{0}", i);
                             ++numReg;
                         }
                     }
@@ -491,12 +656,12 @@ namespace GDBStub
                             }
                             else
                             {
-                                RAM.WriteWord((uint)RnVal, reg[i].ReadWord(0));
+                                RAM.WriteWord((uint)RnVal, reg[i].ReadWord(0, true));
 
                                 Scom = "stm";
                             }
                             RnVal -= 4;
-                            registers += string.Format("r{0}, ", i);
+                            registers += string.Format(", r{0}", i);
                             ++numReg;
                         }
                     }
@@ -511,18 +676,17 @@ namespace GDBStub
                     uint n;
                     if (this.U)
                     {
-                        n = reg[this.rn].ReadWord(0) + (4 * numReg);
+                        n = reg[this.rn].ReadWord(0, true) + (4 * numReg);
                     }
                     else
                     {
-                        n = reg[this.rn].ReadWord(0) - (4 * numReg);
+                        n = reg[this.rn].ReadWord(0, true) - (4 * numReg);
                     }
                     reg[this.rn].WriteWord(0, n);
                 }
 
-                Logger.Instance.writeLog(string.Format("CMD: {0} r{1}, {2}", Scom, this.rn, registers));
-            }//if E
-
+                Logger.Instance.writeLog(string.Format("CMD: {0} r{1}{2}", Scom, this.rn, registers));
+      
 
         }//LoadMultStoreMult
     }

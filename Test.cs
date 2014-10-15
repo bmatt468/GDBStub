@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 using System.Timers;
 
 
-namespace GDBStub
+namespace Simulator1
 {
     public class TestSimulator
     {
@@ -284,7 +284,8 @@ namespace GDBStub
             Logger.Instance.writeLog("TEST: Decoded");
 
             //exeucte the decoded Command!!
-            cpu.execute(cookedInstruction);
+            bool[] flags = {false,false, false,false};
+            cpu.execute(cookedInstruction, flags);
 
         }//runTests
 
