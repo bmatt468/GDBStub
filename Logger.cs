@@ -95,29 +95,29 @@ namespace GDBStub
                 if (trace_is_open)
                 {
                     //step_number program_counter checksum nzcf r0 r1 r2 r3
-                    this.trace.WriteLine(myComp.getStepNumber().ToString().PadLeft(6, '0') + ' ' +
+                    this.trace.WriteLine((myComp.getStepNumber().ToString().PadLeft(6, '0') + ' ' +
                                     myComp.getReg(15).getRegString() + ' ' +
                                     myComp.getCheckSum() + ' ' +
                                     Convert.ToInt32(myComp.getFlag('N')) + Convert.ToInt32(myComp.getFlag('Z')) +
-                                    Convert.ToInt32(myComp.getFlag('C')) + Convert.ToInt32(myComp.getFlag('F')) + ' ' +
-                                    "0=" + myComp.getReg(0).getRegString() + ' ' +
-                                    "1=" + myComp.getReg(1).getRegString() + ' ' +
-                                    "2=" + myComp.getReg(2).getRegString() + ' ' +
-                                    "3=" + myComp.getReg(3).getRegString());
+                                    Convert.ToInt32(myComp.getFlag('C')) + Convert.ToInt32(myComp.getFlag('F')) + "  " +
+                                    " 0=" + myComp.getReg(0).getRegString() + ' ' +
+                                    " 1=" + myComp.getReg(1).getRegString() + ' ' +
+                                    " 2=" + myComp.getReg(2).getRegString() + ' ' +
+                                    " 3=" + myComp.getReg(3).getRegString()).ToUpper());
 
                     //r4 r5 r6 r7 r8 r9
-                    this.trace.WriteLine("4=" + myComp.getReg(4).getRegString() + ' ' +
-                                    "5=" + myComp.getReg(5).getRegString() + ' ' +
-                                    "6=" + myComp.getReg(6).getRegString() + ' ' +
-                                    "7=" + myComp.getReg(7).getRegString() + ' ' +
-                                    "8=" + myComp.getReg(8).getRegString() + ' ' +
-                                    "9=" + myComp.getReg(9).getRegString());
+                    this.trace.WriteLine(("        4=" + myComp.getReg(4).getRegString() + ' ' +
+                                    " 5=" + myComp.getReg(5).getRegString() + ' ' +
+                                    " 6=" + myComp.getReg(6).getRegString() + ' ' +
+                                    " 7=" + myComp.getReg(7).getRegString() + ' ' +
+                                    " 8=" + myComp.getReg(8).getRegString() + ' ' +
+                                    " 9=" + myComp.getReg(9).getRegString()).ToUpper());
                     //r10 r11 r12 r13 r14
-                    this.trace.WriteLine("10=" + myComp.getReg(10).getRegString() + ' ' +
+                    this.trace.WriteLine(("       10=" + myComp.getReg(10).getRegString() + ' ' +
                                     "11=" + myComp.getReg(11).getRegString() + ' ' +
                                     "12=" + myComp.getReg(12).getRegString() + ' ' +
                                     "13=" + myComp.getReg(13).getRegString() + ' ' +
-                                    "14=" + myComp.getReg(14).getRegString());
+                                    "14=" + myComp.getReg(14).getRegString()).ToUpper());
                     this.trace.Flush();
                 }
             }

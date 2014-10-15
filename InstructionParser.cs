@@ -45,6 +45,7 @@ namespace GDBStub
                     // check the PUBWL 
                     if (command.TestFlag(0, 24) || !command.TestFlag(0, 21))
                     {
+
                         instruct = new dataMovement();
                     }
                     else

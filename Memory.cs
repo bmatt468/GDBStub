@@ -113,7 +113,7 @@ namespace GDBStub
             WriteWord(addr, word );//write it back to memory
         }//setFlag
 
-        public uint ReadWord(UInt32 addr)
+        public virtual uint ReadWord(UInt32 addr, bool execute = false)
         {
             uint output = 0;
             //if address is not divisible by 4 escape

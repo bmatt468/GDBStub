@@ -9,9 +9,23 @@ namespace GDBStub
     class Register : Memory
     {
         //creates a register. they are all 32 bits or 4 bytes. yay!!!
+        public uint regID { get; set; }
+
         public Register()
         {
             theArray = new byte[4];
+        }
+
+        public override uint ReadWord(uint addr, bool execute = false)
+        {
+            uint regVal = base.ReadWord(addr);
+
+            if (regID == 15 && execute) 
+            {
+                regVal += 8; 
+            }
+
+            return regVal;
         }
 
         //displays the register
@@ -23,9 +37,7 @@ namespace GDBStub
 
         internal string getRegString()
         {
-            string output = "";
-            output = Convert.ToString(ReadWord(0),16).PadLeft(8, '0');
-            return output;
+            return Convert.ToString(ReadWord(0),16).PadLeft(8, '0');;
         }
     }
 }
