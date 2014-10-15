@@ -8,7 +8,7 @@ using System.Security.Cryptography;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace GDBStub
+namespace Simulator1
 {
     class Memory
     {

@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 using System.Timers;
 
 
-namespace GDBStub
+namespace Simulator1
 {
     public class TestSimulator
     {

@@ -9,7 +9,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 
 
-namespace GDBStub
+namespace Simulator1
 {
 
     /*

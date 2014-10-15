@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace GDBStub
+namespace Simulator1
 {
     //Registers are a type of Memory.
     class Register : Memory

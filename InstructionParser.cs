@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 
 
-namespace GDBStub
+namespace Simulator1
 {
     //the instruction class object
     class InstructionParser

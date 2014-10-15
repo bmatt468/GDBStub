@@ -9,7 +9,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 
 
-namespace GDBStub
+namespace Simulator1
 {
     //edit it!!!
     // A struct that mimics memory layout of ELF program file header

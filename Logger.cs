@@ -5,7 +5,7 @@ using System.Text;
 using System.Diagnostics;
 using System.IO;
 
-namespace GDBStub
+namespace Simulator1
 {
     class Logger
     {
