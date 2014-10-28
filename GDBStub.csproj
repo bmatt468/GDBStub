@@ -3,10 +3,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProjectGuid>{CA42C38B-8B70-4138-B8CD-DD8DB26B4729}</ProjectGuid>
+    <ProjectGuid>{5EE23E2F-D129-4E00-99F2-1600B1FE8A5C}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <NoStandardLibraries>false</NoStandardLibraries>
-    <AssemblyName>GDBStub</AssemblyName>
+    <AssemblyName>armsim</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -76,12 +76,15 @@
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Branch.cs" />
     <Compile Include="Computer.cs" />
     <Compile Include="CPU.cs" />
+    <Compile Include="DataProcessing.cs" />
     <Compile Include="ELF.cs" />
     <Compile Include="Handler.cs" />
     <Compile Include="Instruction.cs" />
     <Compile Include="InstructionParser.cs" />
+    <Compile Include="LoadStore.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="Memory.cs" />
     <Compile Include="Option.cs" />

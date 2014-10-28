@@ -38,10 +38,8 @@ namespace GDBStub
         public string getHash()
         {
             MD5 hasher = new MD5();
-
             return hasher.Hash(theArray);
         }
-
 
         public string getAtAddress(uint addr, int desiredLines = 8)
         {
@@ -51,8 +49,7 @@ namespace GDBStub
             output = "RAM: starting at: " + addr.ToString("X2").PadLeft(8, '0') + "\n";
             output += "0x" + addr.ToString("X2").PadLeft(8, '0') + ": ";
             for (; numOfLines < desiredLines && addr < theArray.Length; addr++)
-            {
-                
+            {                
                 output += theArray[addr].ToString("X2");
                 if ((numOfBytes + 1) % 2 == 0 && numOfBytes != 0)
                 {
@@ -76,7 +73,6 @@ namespace GDBStub
             return theArray;
         }
 
-
         public bool TestFlag(UInt32 addr, byte bit)
         {
             if (bit >= 0 && bit < 32)
@@ -94,7 +90,6 @@ namespace GDBStub
             }
             //if invalid input, return false
             return false;
-
         }//TestFlag
 
         public void SetFlag(UInt32 addr, byte bit, bool flag)
@@ -130,11 +125,9 @@ namespace GDBStub
                 {
                     Logger.Instance.writeLog("\n\nFIX READ WORD\nFIX READ WORD!!!\nFIX READ WORD!!!\n");
                 }
-
-                //output = BitConverter.ToUInt32(theArray, addr);
             }
             return output;
-        }//ReadWord
+        }
 
         public ushort ReadHalfWord(UInt32 addr)
         {
@@ -146,13 +139,13 @@ namespace GDBStub
                 output += (ushort)(theArray[addr]);
             }
             return output;
-        }//ReadHalfWord
+        }
 
         public byte ReadByte(UInt32 addr)
         {
             byte output = theArray[addr];
             return output;
-        }//ReadByte
+        }
 
 
         public void WriteWord(UInt32 addr, uint inpu)
@@ -162,7 +155,7 @@ namespace GDBStub
                 byte[] intBytes = BitConverter.GetBytes(inpu);
                 Array.Copy(intBytes, 0, theArray, addr, 4);
             }
-        }//WriteWord
+        }
 
         public void WriteHalfWord(UInt32 addr, ushort inpu)
         {
@@ -171,18 +164,17 @@ namespace GDBStub
                 byte[] shortBytes = BitConverter.GetBytes(inpu);
                 Array.Copy(shortBytes, 0, theArray, addr, 2);
             }
-        }//WriteHalfWord
+        }
 
         public void WriteByte(UInt32 addr, byte inpu)
         {
             theArray[addr] = inpu;
-        }//WriteByte
+        }
 
         public void CLEAR()
         {
             Array.Clear(theArray, 0, theArray.Length);
         }
-
 
         //returns a byte array of specified size
         //need ot know what size means
@@ -193,14 +185,12 @@ namespace GDBStub
             {
                 output[i] = ReadByte(addr);
             }
-                return output;
+            return output;
         }
 
         internal string print()
         {
             string output = "";
-
-
             return output;
         }
     }

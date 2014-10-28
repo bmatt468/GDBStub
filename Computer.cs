@@ -17,8 +17,6 @@ namespace GDBStub
      * and has relevant methods like run and step.
      * The run method should call the CPU’s fetch, decode, and execute in a loop, until fetch returns a 0.
      * The step method should call the CPU’s fetch, decode, and execute methods (just once, not in a loop).
-     * 
-     * 
      */
     class Computer
     {
@@ -63,7 +61,7 @@ namespace GDBStub
         //r15 is the program counter
         public Computer()
         {
-            this.RAM = new Memory(Option.Instance.getMemSize());
+            this.RAM = new Memory(Option.Instance.memSize);
             
             //Logger.Instance.clearLog();
 
@@ -136,7 +134,6 @@ namespace GDBStub
             Logger.Instance.writeLog(RAM.getAtAddress(addr,length));
             return RAM.dump(addr, length); 
         }
-
 
         //returns the register values from r0 - r15
         // in a one byte array.
@@ -329,7 +326,7 @@ namespace GDBStub
 
                 ELFReader e = new ELFReader();
                 byte[] elfArray = File.ReadAllBytes(file);
-                if (elfArray.Length <= Option.Instance.getMemSize())
+                if (elfArray.Length <= Option.Instance.memSize)
                 {
                     //introspection!!!Woah!!!
                     e.ReadHeader(elfArray);
@@ -425,7 +422,7 @@ namespace GDBStub
         {
             //reset logic
             this.CLEAR();
-            readELF(Option.Instance.getFile(), Option.Instance.getMemSize());
+            readELF(Option.Instance.file, Option.Instance.memSize);
             reg[13].WriteWord(0, 0x7000);
             step_number = 1;
             Logger.Instance.writeLog("***** Reset *****\n");
@@ -667,6 +664,19 @@ namespace GDBStub
                     break;
             }
             Logger.Instance.writeLog(output);
+        }
+
+        public void Start()
+        {
+            Computer.Instance.load(Option.Instance.file, Option.Instance.memSize);
+            Console.WriteLine(Option.Instance.file);
+            if (Option.Instance.exec == true)
+            {
+                //loaded and wants to be executed.
+                Computer.Instance.run();
+                while (Computer.Instance.getThreadStatus()) { ;}
+                System.Environment.Exit(0);
+            }
         }
 
 

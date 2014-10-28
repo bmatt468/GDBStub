@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.IO;
@@ -25,82 +26,43 @@ namespace GDBStub
                 Logger.Instance.clearLog();
 
                 //runs test cases
-                if (Option.Instance.getTest())
-                {
-                   
+                if (Option.Instance.test)
+                {                   
                     TestRam.RunTests();
                     TestSimulator.RunTests();
                     TestDecodeExecute TFDE = new TestDecodeExecute();
                     TFDE.RunTests();
 
-                    Logger.Instance.writeLog("TEST: Finished\n\n\n------------------------------");
-                    
+                    Logger.Instance.writeLog("TEST: Finished\n\n\n------------------------------");                    
                 }
 
                 Logger.Instance.openTrace();
 
                 // pre-loads a file
-                if (Option.Instance.getFile() != "")
+                if (Option.Instance.load)
                 {
-                    //wanted some data to play with
-                    //specified through command line, load the file
-                    Computer.Instance.load(Option.Instance.getFile(), Option.Instance.getMemSize());
-                    if (Option.Instance.execute == true)
-                    {
-                        //loaded and wants to be executed.
-                        Computer.Instance.run();
-                        while (Computer.Instance.getThreadStatus()) { ;}
-                        System.Environment.Exit(0);
-
-                    }
+                    DoWork();
                 }
-
-                // listens for gdb connection
-                if (Option.Instance.getDebug())
-                {   
-
-                    Handler h = new Handler();
-                    
-                    h.Listen(8080);
-	            }
-                //if debug flag is not set. run
-
-                
-                danielTesting(args);
-
-                Logger.Instance.clearLog();
-            
-            }
-            
-           
+            }           
         }
 
-
-        static void danielTesting(string[] args)
+        static void DoWork()
         {
+            // handler thread
+            Handler h = new Handler();
+            Thread handlerThread = new Thread(new ThreadStart(h.Start));
 
- 
-            //THis will be replaces later
-            //with information of just running
-                    Console.WriteLine("\n");
-                    Console.Write("Please input a command: ");
-                    string input = Console.ReadLine();
-                    Logger.Instance.openTrace();
-                    while (input != "q" && input != "")
-                    {
-                        Computer.Instance.command(input);
-                        Console.Write("\nPlease input a command: ");
-                        //Run, Step, Stop/Break, and Reset
-                        input = Console.ReadLine();
-                    }
+            // loading thread
+            Thread loaderThread = new Thread(new ThreadStart(Computer.Instance.Start));
 
-         }//DanielTest
+            // start threads
+            handlerThread.Start();
+            //loaderThread.Start();
 
-
-
-    }//programClass
-
-
-}//namespace
+            // spool to allow for life to enter the threads
+            while (!handlerThread.IsAlive || !loaderThread.IsAlive) ;
+        }  
+    }
+}
 
 

@@ -5,69 +5,44 @@ using System.Text;
 
 
 namespace GDBStub
-{
-    //the instruction class object
+{    
     class InstructionParser
     {
-
         uint type = 0;          // xx   2 determines IPUBWL, or Opcode
-
-
-        Instruction instruct = new Instruction();
-
+        Instruction i = new Instruction();
 
         public Instruction parse(Memory command)
         {
-            //initialize self based on command
-
-            //decode data
-            //Check special cases
-
-            //Get the conditional
-
-            //get the type number
+            // get type
             this.type = (uint)((command.ReadByte(3) & 0x0c) >> 2);
-            //Get immediate value or not.
-            //get the RN register
             
-
-
-            //switches based on type
             switch (this.type)
             {
                 case 0:
                     //data manipulation 00
-
-                    instruct = new dataManipulation();
+                    i = new DataProcessing();
                     break;
                 case 1:
                     //ldr/str 01
                     // check the PUBWL 
                     if (command.TestFlag(0, 24) || !command.TestFlag(0, 21))
                     {
-
-                        instruct = new dataMovement();
+                        i = new LoadStore();
                     }
-                    else
-                    {
-                        //unpredictable
-                    }
-
-
                     break;
                 case 2:
                     //10
                     if (!command.TestFlag(0, 25))
                     {
                         //load store multiple
-                        instruct = new dataMoveMultiple();
+                        i = new LoadStoreMultiple();
                     }
                     else
                     {
                         if (command.TestFlag(0, 27) && !command.TestFlag(0, 26) && command.TestFlag(0, 25))
                         {
                             //branch command.
-                            instruct = new Branch();
+                            i = new Branch();
                         }
                     }
                     break;
@@ -83,19 +58,13 @@ namespace GDBStub
                     break;
             }
 
-            instruct.parse(command);
-            instruct.cond = (uint)command.ReadByte(3) >> 4;
-            instruct.type = (uint)((command.ReadByte(3) & 0x0c) >> 2);
-            instruct.originalBits = (uint)command.ReadWord(0);
-            instruct.rn = (uint)((command.ReadWord(0) & 0x000F0000) >> 16);
-            instruct.rd = (uint)((command.ReadWord(0) & 0x0000F000) >> 12);
-            return instruct; 
-
+            i.ParseCommand(command);
+            i.Cond = (uint)command.ReadByte(3) >> 4;
+            i.Type = (uint)((command.ReadByte(3) & 0x0c) >> 2);
+            i.initial = (uint)command.ReadWord(0);
+            i.Rn = (uint)((command.ReadWord(0) & 0x000F0000) >> 16);
+            i.Rd = (uint)((command.ReadWord(0) & 0x0000F000) >> 12);
+            return i;
         }
-
-
-
-
     }
-
 }

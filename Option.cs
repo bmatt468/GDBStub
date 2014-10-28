@@ -11,11 +11,9 @@ namespace GDBStub
     // options that have been set.
     public class Option
     {
-
         private static Option instance;
 
         private Option() {}
-
         
         public static Option Instance{
             get {
@@ -25,78 +23,45 @@ namespace GDBStub
             return instance;
             }
         }
+        
+        public bool exec { get; set; }
+        public bool load { get; set; }
+        public bool test { get; set; }
+        public int memSize { get; set; }
+        public string file { get; set; }      
 
-        public string file = "";
-        public int memSize = 32768;
-        public bool test = false;
-        public bool valid;
-        bool debugFlag =false;
-
-
-        //-----------------Getters
-        public bool  execute { get; set; }
-        public string getFile()
+        public void DisplayUsage(string input = "")
         {
-            return file;
-        }
-        public int getMemSize()
-        {
-            return memSize;
-        }
-        public bool getTest()
-        {
-            return test;
-        }
-        public void getError(string inpu)
-        {
-            string output = inpu;
-            output += "\nValid input is: armsim [--load elf-file] [ --mem memory-size ] [ --test] [--debug]";
-            Console.WriteLine(output);
+            if (input != "") { Console.WriteLine(input); }
+            Console.WriteLine("armsim [--load elf-file] [ --mem memory-size ] [ --test] [--exec]");
         }
 
-
-        internal bool getDebug()
-        {
-            return debugFlag;
-        }
-
-        //------------------Setters
-        public void setTest(bool newTest)
-        {
-            test = newTest;
-        }
-        public void setFile(string newFile)
-        {
-            file = newFile;
-        }
-        public void setMemSize(int newMemSize)
-        {
-            memSize = newMemSize;
-        }
-
-
-
-        public bool parseArgs(string[] inpu)
+        public bool parseArgs(string[] input)
         {
             file = "";
             test = false;
-            valid = true;
             memSize = 32768;
-            for (int i = 0; i < inpu.Length; i++)
+            bool valid = true;
+            if (input.Length == 0) {
+                DisplayUsage();
+                return (valid = false);
+            }
+            for (int i = 0; i < input.Length; i++)
             {
-                switch (inpu[i])
+                switch (input[i])
                 {
                     case "--load":
                         i++;
-                        file = inpu[i];
+                        file = input[i];
+                        load = true;
                         break;
 
                     case "--mem":
                         i++;
-                        memSize = Convert.ToInt32(inpu[i]);
+                        memSize = Convert.ToInt32(input[i]);
                         if (memSize > 1048576)
                         {
-                            getError("Memsize is too large, cannot be over 1048576 bytes.");
+                            DisplayUsage("Memsize is too large, cannot be over 1048576 bytes.");
                             valid = false;
                         }
                         break;
@@ -104,15 +69,17 @@ namespace GDBStub
                     case "--test":
                         test = true;
                         break;
-                    case "--debug":
-                        debugFlag = true;
-                        break;
                     case "--exec":
-                        execute = true;
+                        exec = true;
                         break;
+                    case "--help":
+                    case "-?":
+                        DisplayUsage();
+                        break;
+
                     default:
                         //this can be the helper instructions
-                        getError(inpu[i] + " is an invalid option.");
+                        DisplayUsage(input[i] + " is an invalid option.");
                         valid = false;
                         break;
                 }

@@ -11,8 +11,12 @@ namespace GDBStub
     
     class Handler
     {
-        
-        public void Listen(int portNo)
+
+        public void Start()
+        {
+            Listen();
+        }
+        public void Listen(int portNo = 8080)
         {
             try
             {
@@ -110,11 +114,13 @@ namespace GDBStub
                     }
 
                     client.Close();
+                    Logger.Instance.clearLog();
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Logger.Instance.clearLog();
             }
         }
 
@@ -397,6 +403,6 @@ namespace GDBStub
             byte[] msg = System.Text.Encoding.UTF8.GetBytes("+$" + response + "#" + chk.ToString("x2"));
             ns.Write(msg, 0, msg.Length);
             Console.WriteLine(String.Format("Sent: {0}", System.Text.Encoding.UTF8.GetString(msg)));            
-        }
+        }        
     }
 }

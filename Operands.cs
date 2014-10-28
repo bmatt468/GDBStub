@@ -5,9 +5,6 @@ using System.Text;
 
 namespace GDBStub
 {
-
-
-
     //11..0
     class ShifterOperand
     {
@@ -20,8 +17,6 @@ namespace GDBStub
         public uint shift_imm { get; set; }
         public bool bit7 { get; set; }
         public bool bit4 { get; set; }
-
-
 
         public uint offset { get; set; }
 
@@ -72,23 +67,14 @@ namespace GDBStub
                     Rm = (uint)(command.ReadWord(0) & 0x0000000F);
                     shiftType = (uint)((command.ReadWord(0) & 0x00000060) >> 5);
                     shift_imm = (uint)((command.ReadWord(0) & 0x00000F80) >> 7);
-                }//immediate val
-
-
-            }//shifteroperand
-
+                }
+            }
         }
-
 
         public uint RotateRight(uint value, int count)
         {
             return (value >> count) | (value << (32 - count));
         }
-
-
-
-
-
 
         internal void shiftRM(uint toBeShifted, uint shiftedBy)
         {
@@ -116,11 +102,5 @@ namespace GDBStub
                     break;
             }
         }
-    }//class
-
-
-    class coProcessorOperand
-    {
-
     }
 }
