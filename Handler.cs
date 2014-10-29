@@ -12,11 +12,20 @@ namespace GDBStub
     class Handler
     {
 
+        public bool interput { get; set; }
         public void Start()
         {
             Listen();
+            interput = false;
+
         }
-        public void Listen(int portNo = 8080)
+        public void StartReadOnly()
+        {
+            Listen(iOnlyWantToReadDataPlz:true);
+            interput = false;
+
+        }
+        public void Listen(int portNo = 8080, bool iOnlyWantToReadDataPlz = false)
         {
             try
             {
@@ -42,7 +51,7 @@ namespace GDBStub
 
                 // begin listening loop
                 while (true)
-                {
+                {                    
                     // the following lines accept an incoming connection
                     // (from the gdb client), and creates a stream to accept
                     // data passed to it. It also created an instance of 
@@ -58,7 +67,7 @@ namespace GDBStub
                         // Translate data bytes to a ASCII string.
                         data = System.Text.Encoding.ASCII.GetString(buffer, 0, i);
                         //NOT IN HEX!!!!
-                        Console.WriteLine(String.Format("Received: {0}", data));
+                        //Console.WriteLine(String.Format("Received: {0}", data));
 
                         // Process the data sent by the client.
                         switch (data)
@@ -103,7 +112,10 @@ namespace GDBStub
                                 }
 
                                 // parse command
-                                this.ParseCommand(command, ns);
+                                if (!iOnlyWantToReadDataPlz)
+                                {
+                                    this.ParseCommand(command, ns);
+                                }                               
                                 
                                 break;
                         }
@@ -402,7 +414,7 @@ namespace GDBStub
             chk %= 256;
             byte[] msg = System.Text.Encoding.UTF8.GetBytes("+$" + response + "#" + chk.ToString("x2"));
             ns.Write(msg, 0, msg.Length);
-            Console.WriteLine(String.Format("Sent: {0}", System.Text.Encoding.UTF8.GetString(msg)));            
+            //Console.WriteLine(String.Format("Sent: {0}", System.Text.Encoding.UTF8.GetString(msg)));            
         }        
     }
 }

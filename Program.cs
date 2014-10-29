@@ -39,28 +39,52 @@ namespace GDBStub
                 Logger.Instance.openTrace();
 
                 // pre-loads a file
-                if (Option.Instance.load)
+                if (Option.Instance.load || Option.Instance.debug)
                 {
-                    DoWork();
-                }
+                    MAKETHISTHINGWORK(Option.Instance.load, Option.Instance.exec, Option.Instance.debug);
+                }              
             }           
         }
 
-        static void DoWork()
-        {
-            // handler thread
-            Handler h = new Handler();
-            Thread handlerThread = new Thread(new ThreadStart(h.Start));
+        static void MAKETHISTHINGWORK(bool iCanHazFilePlz, bool iCanBeRunPlz, bool iCanHazDebugModePlz)
+        {            
+            // first do loady type stuff
+            if (iCanHazFilePlz)
+            {
+                Computer.Instance.load(Option.Instance.file, Option.Instance.memSize);
+                // then do executy type stuff
+                if (iCanBeRunPlz)
+                {
+                    Handler potentialHandlerIfTheRightFlagIsSet = null;
+                    if (iCanHazDebugModePlz)
+                    {
+                        potentialHandlerIfTheRightFlagIsSet = new Handler();
+                        Thread thisThreadWillHandleTheHandler_AKATheHandleHandler = new Thread(
+                            new ThreadStart(potentialHandlerIfTheRightFlagIsSet.StartReadOnly));
+                        thisThreadWillHandleTheHandler_AKATheHandleHandler.Start();
+                    }
+                    Computer.Instance.run();
+                    while (Computer.Instance.getThreadStatus())
+                    {
+                        if (iCanHazDebugModePlz && potentialHandlerIfTheRightFlagIsSet.interput)
+                        {
+                            Console.WriteLine("Interupt Found.... now what?");
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                }
+            } 
+            // if not loady type stuff then try debugy type stuff
+            else if (iCanHazDebugModePlz)
+            {
+                Handler GDBMiesterHandlerOfSuperAwesomenessReadySetGoYouCanTellImASeniorBecauseMyVariableNamesAreLongAndPointlessYeaRollTide = new Handler();
+                GDBMiesterHandlerOfSuperAwesomenessReadySetGoYouCanTellImASeniorBecauseMyVariableNamesAreLongAndPointlessYeaRollTide.Start();
+            }
 
-            // loading thread
-            Thread loaderThread = new Thread(new ThreadStart(Computer.Instance.Start));
-
-            // start threads
-            handlerThread.Start();
-            //loaderThread.Start();
-
-            // spool to allow for life to enter the threads
-            while (!handlerThread.IsAlive || !loaderThread.IsAlive) ;
+            System.Environment.Exit(0);
         }  
     }
 }

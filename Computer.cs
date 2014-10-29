@@ -354,7 +354,7 @@ namespace GDBStub
             {
                 output = -2;
                 Logger.Instance.writeLog("Err: File not found");
-                
+                System.Environment.Exit(1);
             }
             catch //general exception
             {
@@ -405,7 +405,6 @@ namespace GDBStub
  //Load, Reset, Stop, Step, and Run and Go.
         public void load(string file, int memSize = -1)
         {
-
             readELF(file, memSize);
             checkSum = RAM.getHash();
             step_number = 1;
@@ -665,22 +664,5 @@ namespace GDBStub
             }
             Logger.Instance.writeLog(output);
         }
-
-        public void Start()
-        {
-            Computer.Instance.load(Option.Instance.file, Option.Instance.memSize);
-            Console.WriteLine(Option.Instance.file);
-            if (Option.Instance.exec == true)
-            {
-                //loaded and wants to be executed.
-                Computer.Instance.run();
-                while (Computer.Instance.getThreadStatus()) { ;}
-                System.Environment.Exit(0);
-            }
-        }
-
-
-
-
     }
 }

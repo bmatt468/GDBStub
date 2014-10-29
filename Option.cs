@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace GDBStub
 {
-
     //Option Parser is a singleton class. there is one of them that holds the current 
     // options that have been set.
     public class Option
@@ -28,12 +27,13 @@ namespace GDBStub
         public bool load { get; set; }
         public bool test { get; set; }
         public int memSize { get; set; }
-        public string file { get; set; }      
+        public string file { get; set; }
+        public bool debug { get; set; }
 
         public void DisplayUsage(string input = "")
         {
             if (input != "") { Console.WriteLine(input); }
-            Console.WriteLine("armsim [--load elf-file] [ --mem memory-size ] [ --test] [--exec]");
+            Console.WriteLine("armsim [--load elf-file] [ --mem memory-size ] [ --test] [--exec] [--debug]");
         }
 
         public bool parseArgs(string[] input)
@@ -42,6 +42,7 @@ namespace GDBStub
             test = false;
             memSize = 32768;
             bool valid = true;
+            debug = false;
             if (input.Length == 0) {
                 DisplayUsage();
                 return (valid = false);
@@ -71,6 +72,9 @@ namespace GDBStub
                         break;
                     case "--exec":
                         exec = true;
+                        break;
+                    case "--debug":
+                        debug = true;
                         break;
                     case "--help":
                     case "-?":
