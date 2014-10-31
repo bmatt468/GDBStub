@@ -5,212 +5,204 @@ using System.Text;
 
 namespace GDBStub
 {
+    // class to handle all the data processing operators
+    // builds off its parent class
     class DataProcessing : Instruction
     {
         public uint opcode { get; set; }
-        public bool I { get; set; }
-        public ShifterOperand shiftOp { get; set; }
-        public bool bit4 { get; set; }
-        public bool bit7 { get; set; }
+        public bool b25 { get; set; }
+        public Operand2 shifter { get; set; }
+        public bool b4 { get; set; }
+        public bool b7 { get; set; }        
 
+        /// <summary>
+        /// This method parses the command to get the valuable information
+        /// </summary>
+        /// <param name="command"></param>
         public override void ParseCommand(Memory command)
         {
-            //Get S Byte
-            this.I = command.TestFlag(0, 25);
+            // obtain all the magic bits that we need           
+            this.b4 = command.TestFlag(0, 4);
+            this.b7 = command.TestFlag(0, 7);
             this.S = command.TestFlag(0, 20);
-            this.bit4 = command.TestFlag(0, 4);
-            this.bit7 = command.TestFlag(0, 7);
-            //dataManipulation dataManinstruct = new dataManipulation();
-            this.shiftOp = new ShifterOperand(command);
+            this.b25 = command.TestFlag(0, 25);
 
-            if (!(!I && bit4 && bit7))
+            // create our op2
+            this.shifter = new Operand2(command);
+
+            // check weird bits for possible multiplication
+            if (b4 && b7 && !b25)
             {
-                //it's data man
-
-                //get OpCode
-                uint c = command.ReadWord(0, true);
-                this.opcode = (uint)((c & 0x01E00000) >> 21);
-                return;
-
-            }
-            else
-            {
-                //it's a multpiply
                 this.opcode = 0x1F;
                 return;
             }
-        }
-
-        public override void Run(ref Register[] reg, ref Memory RAM)
-        {
-            Logger.Instance.writeLog(string.Format("CMD: Data Manipulation 0x{0}", Convert.ToString(this.initial, 16)));
-
-            switch (this.opcode)
-            {
-                case 0:
-                    //and
-                    this.and(ref reg, ref RAM);
-                    break;
-                case 1: //EOR
-                    this.eor(ref reg, ref RAM);
-                    break;
-                case 2: //SUb
-                    this.sub(ref reg, ref RAM);
-                    break;
-                case 3: //RSB
-                    this.rsb(ref reg, ref RAM);
-                    break;
-                case 4: //ADD
-                    this.add(ref reg, ref RAM);
-                    break;
-                case 5: //ADC
-                    break;
-                case 6: //SBC
-                    break;
-                case 7: //RSC
-                    break;
-                case 8: //TST
-                    break;
-                case 9: //teq
-                    break;
-                case 10: //cmp
-                    this.cmp(ref reg, ref RAM);
-                    break;
-                case 11: //cmn
-                    break;
-                case 12: //oor
-                    this.oor(ref reg, ref RAM);
-                    break;
-                case 13: //mov
-                    this.mov(ref reg, ref RAM);
-                    break;
-                case 14: //bic
-                    this.bic(ref reg, ref RAM);
-                    break;
-                case 15: //mvn
-                    this.mvn(ref reg, ref RAM);
-                    break;
-                case 0x1F:
-                    this.mul(ref reg, ref RAM);
-                    break;
-
-                default:
-                    break;
+            else
+            {                
+                uint c = command.ReadWord(0, true);
+                this.opcode = (uint)((c & 0x01E00000) >> 21);
+                return;
             }
         }
 
-        private void mul(ref Register[] reg, ref Memory RAM)
+        /// <summary>
+        /// Run the commands that are given
+        /// </summary>
+        /// <param name="ra"></param>
+        /// <param name="mem"></param>
+        public override void Run(Register[] ra, Memory mem)
         {
-            uint RmValue = reg[this.shiftOp.Rm].ReadWord(0, true);
-            uint RsValue = reg[this.shiftOp.Rs].ReadWord(0, true);
-            uint product = RmValue * RsValue;
-            if (product > 0xFFFFFFFF) { Logger.Instance.writeLog("ERR: Multiply to large"); }
-            reg[this.Rn].WriteWord(0, product);
-            Logger.Instance.writeLog(String.Format("CMD: MUL R{0},R{1},R{2} : 0x{3}",
-                this.Rd, this.shiftOp.Rm, this.shiftOp.Rs, Convert.ToString(this.initial, 16)));
+            string tempHexString = Convert.ToString(this.initialBytes, 16);
+            Logger.Instance.writeLog(string.Format("Command Type: Data Manipulation 0x{0}", tempHexString));
+            // Try to discover what type of command we have
+            
+            switch (this.opcode)
+            {
+                case 0: // Logical AND                    
+                    this.CommonWork(ref ra, ref mem,"and");
+                    Logger.Instance.writeLog(string.Format("Specific Command: Logical AND 0x{0}", tempHexString));
+                    break;
+                case 1: // Logical Exclusive OR
+                    this.CommonWork(ref ra, ref mem,"eor");
+                    Logger.Instance.writeLog(string.Format("Specific Command: Logical Exclusive OR 0x{0}", tempHexString));
+                    break;
+                case 2: // Subtract
+                    this.CommonWork(ref ra, ref mem,"sub");
+                    Logger.Instance.writeLog(string.Format("Specific Command: Subtrac 0x{0}", tempHexString));
+                    break;
+                case 3: // Reverse Subtract
+                    this.CommonWork(ref ra, ref mem,"rsb");
+                    Logger.Instance.writeLog(string.Format("Specific Command: Reverse Subtract 0x{0}", tempHexString));
+                    break;
+                case 4: // Add
+                    this.CommonWork(ref ra, ref mem, "add");
+                    Logger.Instance.writeLog(string.Format("Specific Command: Addition 0x{0}", tempHexString));
+                    break;
+                case 5: // Add with Carry (unimplemented)
+                case 6: // Subtract with Carry (unimplemented)
+                case 7: // Reverse Subtract with Carry (unimplemented)
+                case 8: // Test (unimplemented)
+                case 9: // Test Equivalence (unimplemented)
+                    break;
+                case 10: // Compare
+                    this.cmp(ref ra, ref mem);
+                    Logger.Instance.writeLog(string.Format("Specific Command: Compare 0x{0}", tempHexString));
+                    break;
+                case 11: // Compare Negated (unimplemented)
+                    break;
+                case 12: // Logical (inclusive) OR
+                    this.CommonWork(ref ra, ref mem, "oor");
+                    Logger.Instance.writeLog(string.Format("Specific Command: Logical (inclusive) OR 0x{0}", tempHexString));
+                    break;
+                case 13: // Move
+                    this.CommonWork(ref ra, ref mem,"mov");
+                    Logger.Instance.writeLog(string.Format("Specific Command: Move 0x{0}", tempHexString));
+                    break;
+                case 14: // Bit Clear
+                    this.CommonWork(ref ra, ref mem,"bic");
+                    Logger.Instance.writeLog(string.Format("Specific Command: Bit Clear 0x{0}", tempHexString));
+                    break;
+                case 15: // Move Not
+                    this.CommonWork(ref ra, ref mem,"mvn");
+                    Logger.Instance.writeLog(string.Format("Specific Command: Move Not 0x{0}", tempHexString));
+                    break;
+                case 0x1F: // Multiply
+                    this.mul(ref ra, ref mem);
+                    Logger.Instance.writeLog(string.Format("Specific Command: Multiply 0x{0}", tempHexString));
+                    break;
+                default:
+                    break;
+            }
+        }              
 
-        }
-
-        private void bic(ref Register[] reg, ref Memory RAM)
+        /// <summary>
+        /// Method to handle the common work for data processing
+        /// Each of the operations are similar so this method
+        /// reduces the amount of copy/paste
+        /// </summary>
+        /// <param name="ra"></param>
+        /// <param name="mem"></param>
+        /// <param name="cmd"></param>
+        private void CommonWork(ref Register[] ra, ref Memory mem, string cmd)
         {
-            this.shiftOp = Shift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
-            uint RnValue = reg[this.Rn].ReadWord(0, true);
-
-            reg[this.Rd].WriteWord(0, (RnValue & (~this.shiftOp.offset)));
-
-            Logger.Instance.writeLog(String.Format("CMD: BIC R{0},R{1},{2} : 0x{3}",
-                this.Rd, this.Rn, this.shiftOp.offset, Convert.ToString(this.initial, 16)));
-        }
-
-
-        // This can be refactored
-        //maybe pass in two values in the order you need them and an operator....
-        private void eor(ref Register[] reg, ref Memory RAM)
+            this.shifter = Shift(this.b25, this.shifter, ra[this.shifter.Rm].ReadWord(0, true), ra);
+            uint source = ra[this.Rn].ReadWord(0, true);
+            switch (cmd)
+            {                
+                case "add":
+                    ra[this.Rd].WriteWord(0, (source + this.shifter.offset));
+                    Logger.Instance.writeLog(String.Format("Assembly: ADD R{0},R{1},{2} : 0x{3}",
+                    this.Rd, this.Rn, this.shifter.offset, Convert.ToString(this.initialBytes, 16)));
+                    break;
+                case "and":
+                    ra[this.Rd].WriteWord(0, (source & this.shifter.offset));
+                    Logger.Instance.writeLog(String.Format("Assembly: AND R{0},R{1},{2} : 0x{3}",
+                    this.Rd, this.Rn, this.shifter.offset, Convert.ToString(this.initialBytes, 16)));
+                    break;
+                case "bic":
+                    ra[this.Rd].WriteWord(0, (source & (~this.shifter.offset)));
+                    Logger.Instance.writeLog(String.Format("Assembly: BIC R{0},R{1},{2} : 0x{3}",
+                    this.Rd, this.Rn, this.shifter.offset, Convert.ToString(this.initialBytes, 16)));
+                    break;
+                case "eor":
+                    ra[this.Rd].WriteWord(0, (source ^ this.shifter.offset));
+                    Logger.Instance.writeLog(String.Format("Assembly: EOR R{0},R{1},{2} : 0x{3}",
+                    this.Rd, this.Rn, this.shifter.offset, Convert.ToString(this.initialBytes, 16)));
+                    break;
+                case "mov":
+                    ra[this.Rd].WriteWord(0, this.shifter.offset);
+                    Logger.Instance.writeLog(String.Format("Assembly: MOV R{0},{1} : 0x{2}",
+                    this.Rd, this.shifter.offset, Convert.ToString(this.initialBytes, 16)));
+                    break;
+                case "mvn":
+                    ra[this.Rd].WriteWord(0, ~this.shifter.offset);
+                    Logger.Instance.writeLog(String.Format("Assembly: MVN R{0},{1} : 0x{2}",
+                    this.Rd, this.shifter.offset, Convert.ToString(this.initialBytes, 16)));
+                    break;
+                case "oor":
+                    ra[this.Rd].WriteWord(0, (source | this.shifter.offset));
+                    Logger.Instance.writeLog(String.Format("Assembly: OOR R{0},R{1},{2} : 0x{3}",
+                    this.Rd, this.Rn, this.shifter.offset, Convert.ToString(this.initialBytes, 16)));
+                    break;
+                case "rsb":
+                    ra[this.Rd].WriteWord(0, (this.shifter.offset - source));
+                    Logger.Instance.writeLog(String.Format("Assembly: RSB R{0},R{1},{2} : 0x{3}",
+                    this.Rd, this.Rn, this.shifter.offset, Convert.ToString(this.initialBytes, 16)));
+                    break;
+                case "sub":
+                    ra[this.Rd].WriteWord(0, (source - this.shifter.offset));
+                    Logger.Instance.writeLog(String.Format("Assembly: sub R{0},R{1},{2} : 0x{3}",
+                    this.Rd, this.Rn, this.shifter.offset, Convert.ToString(this.initialBytes, 16)));
+                    break;
+                default:
+                    break;
+            }
+        }        
+        
+        private void cmp(ref Register[] ra, ref Memory mem)
         {
-            this.shiftOp = Shift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
-            uint RnValue = reg[this.Rn].ReadWord(0, true);
-            reg[this.Rd].WriteWord(0, (RnValue ^ this.shiftOp.offset));
-            Logger.Instance.writeLog(String.Format("CMD: EOR R{0},R{1},{2} : 0x{3}",
-                this.Rd, this.Rn, this.shiftOp.offset, Convert.ToString(this.initial, 16)));
-        }
-
-        private void oor(ref Register[] reg, ref Memory RAM)
-        {
-            this.shiftOp = Shift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
-            uint RnValue = reg[this.Rn].ReadWord(0, true);
-            reg[this.Rd].WriteWord(0, (RnValue | this.shiftOp.offset));
-            Logger.Instance.writeLog(String.Format("CMD: OOR R{0},R{1},{2} : 0x{3}",
-                this.Rd, this.Rn, this.shiftOp.offset, Convert.ToString(this.initial, 16)));
-        }
-
-        private void and(ref Register[] reg, ref Memory RAM)
-        {
-            this.shiftOp = Shift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
-            uint RnValue = reg[this.Rn].ReadWord(0, true);
-            reg[this.Rd].WriteWord(0, (RnValue & this.shiftOp.offset));
-            Logger.Instance.writeLog(String.Format("CMD: AND R{0},R{1},{2} : 0x{3}",
-                this.Rd, this.Rn, this.shiftOp.offset, Convert.ToString(this.initial, 16)));
-        }
-
-        private void rsb(ref Register[] reg, ref Memory RAM)
-        {
-            this.shiftOp = Shift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
-            uint RnValue = reg[this.Rn].ReadWord(0, true);
-            reg[this.Rd].WriteWord(0, (this.shiftOp.offset - RnValue));
-            Logger.Instance.writeLog(String.Format("CMD: rsb R{0},R{1},{2} : 0x{3}",
-                this.Rd, this.Rn, this.shiftOp.offset, Convert.ToString(this.initial, 16)));
-        }
-
-        private void mvn(ref Register[] reg, ref Memory RAM)
-        {
-            this.shiftOp = Shift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
-            reg[this.Rd].WriteWord(0, ~this.shiftOp.offset);
-            Logger.Instance.writeLog(String.Format("CMD: mvn R{0},{1} : 0x{2}",
-                this.Rd, this.shiftOp.offset, Convert.ToString(this.initial, 16)));
-        }
-
-        private void cmp(ref Register[] reg, ref Memory RAM)
-        {
-            this.shiftOp = Shift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
-            uint RnVal = reg[this.Rn].ReadWord(0, true);
-            uint cmpVal = RnVal - this.shiftOp.offset;
-            Memory alu = new Memory(4);
-            alu.WriteWord(0, cmpVal);
+            this.shifter = Shift(this.b25, this.shifter, ra[this.shifter.Rm].ReadWord(0, true), ra);
+            uint source = ra[this.Rn].ReadWord(0, true);
+            uint comparer = source - this.shifter.offset;
+            Memory m = new Memory(4);
+            m.WriteWord(0, comparer);
             //set N flag
-            N = alu.TestFlag(0, 31);
-            Z = alu.ReadWord(0, true) == 0;
-            Logger.Instance.writeLog("Fix compare C and V flags");
+            N = m.TestFlag(0, 31);
+            Z = m.ReadWord(0, true) == 0;
             C = false;
             F = false;
-            Logger.Instance.writeLog(String.Format("CMD: cmp R{0}, {1} : 0x{2}",
-                this.Rn, this.shiftOp.offset, Convert.ToString(this.initial, 16)));
-        }
-
-        public void add(ref Register[] reg, ref Memory RAM)
+            Logger.Instance.writeLog(String.Format("Assembly: CMP R{0}, {1} : 0x{2}",
+                this.Rn, this.shifter.offset, Convert.ToString(this.initialBytes, 16)));
+        }        
+                
+        private void mul(ref Register[] reg, ref Memory RAM)
         {
-            this.shiftOp = Shift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
-            uint RnValue = reg[this.Rn].ReadWord(0, true);
-            reg[this.Rd].WriteWord(0, (RnValue + this.shiftOp.offset));
-            Logger.Instance.writeLog(String.Format("CMD: ADD R{0},R{1},{2} : 0x{3}",
-                this.Rd, this.Rn, this.shiftOp.offset, Convert.ToString(this.initial, 16)));
-        }
-
-        public void sub(ref Register[] reg, ref Memory RAM)
-        {
-            this.shiftOp = Shift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
-            uint RnValue = reg[this.Rn].ReadWord(0, true);
-            reg[this.Rd].WriteWord(0, (RnValue - this.shiftOp.offset));
-            Logger.Instance.writeLog(String.Format("CMD: sub R{0},R{1},{2} : 0x{3}",
-                this.Rd, this.Rn, this.shiftOp.offset, Convert.ToString(this.initial, 16)));
-
-        }
-
-        private void mov(ref Register[] reg, ref Memory RAM)
-        {
-            this.shiftOp = Shift(this.I, this.shiftOp, reg[this.shiftOp.Rm].ReadWord(0, true), reg);
-            reg[this.Rd].WriteWord(0, this.shiftOp.offset);
-            Logger.Instance.writeLog(String.Format("CMD: mov R{0},{1} : 0x{2}",
-                this.Rd, this.shiftOp.offset, Convert.ToString(this.initial, 16)));
-        }
+            uint rmOp = reg[this.shifter.Rm].ReadWord(0, true);
+            uint rsOp = reg[this.shifter.regShiftLength].ReadWord(0, true);
+            uint product = rmOp * rsOp;
+            if (product > 0xFFFFFFFF) { Logger.Instance.writeLog("Error: Multiply Overflow"); }
+            reg[this.Rn].WriteWord(0, product);
+            Logger.Instance.writeLog(String.Format("Assembly: MUL R{0},R{1},R{2} : 0x{3}",
+                this.Rd, this.shifter.Rm, this.shifter.regShiftLength, Convert.ToString(this.initialBytes, 16)));
+        }       
     }
 }

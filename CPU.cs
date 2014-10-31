@@ -11,50 +11,60 @@ using System.Runtime.InteropServices;
 
 namespace GDBStub
 {
-
-    /*
-     * CPU class that represents the CPU. This should have methods named 
-     * fetch, decode, and execute. The CPU class should have instance variables 
-     * that hold references to the registers and RAM objects.
-     */
+    // This class is the main computer for the simulator.
+    // This class controls the fetching, decoding, and execution
+    // of instructions.
     class CPU
     {
-        private Memory _RAM;
+        private Memory _ram;
         private Register[] _reg;
 
-        //CPU constructor
-        public CPU(ref Memory RAM, ref Register[] reg)
+        /// <summary>
+        /// CPU constructor
+        /// </summary>
+        /// <param name="RAM"></param>
+        /// <param name="reg"></param>
+        public CPU(Memory RAM, Register[] reg)
         {
-            _RAM = RAM;
+            _ram = RAM;
             _reg = reg;
         }
 
-        //fetches data from RAM 
-        public Memory fetch()
+        /// <summary>
+        /// fetch the next command from memory
+        /// </summary>
+        /// <returns></returns>  
+        public Memory Fetch()
         {
             Memory cmd = new Memory(4);
-            cmd.WriteWord(0, _RAM.ReadWord(_reg[15].ReadWord(0)));
-            Logger.Instance.writeLog(String.Format("CMD: 0x{0}", Convert.ToString(cmd.ReadWord(0), 16)));
-
+            cmd.WriteWord(0, _ram.ReadWord(_reg[15].ReadWord(0)));
+            Logger.Instance.writeLog(String.Format("Command Received: 0x{0}", Convert.ToString(cmd.ReadWord(0), 16)));
             return cmd;
         }
 
-        //instruction decoder
-        public Instruction decode(Memory data)
-        {
-            InstructionParser parser = new InstructionParser();
-            Instruction inst = parser.parse(data);            
-            return inst;
+        /// <summary>
+        /// decode the instruction from memory
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public Instruction Decode(Memory data)
+        {            
+            return Instruction.DecodeInstruction(data);
         }
 
-        //executes the actual data by movine registers and stuff
-        public bool[] execute(Instruction command, bool[] flags)
+        /// <summary>
+        /// executes the decoded instruction
+        /// </summary>
+        /// <param name="cmd"></param>
+        /// <param name="flags"></param>
+        /// <returns></returns>
+ 
+        public bool[] Execute(Instruction cmd, bool[] flags)
         {            
-            if (command.checkCond(flags))
+            if (cmd.checkCond(flags))
             {
-                command.Run(ref _reg, ref _RAM);                
+                cmd.Run(_reg, _ram);                
             }
-
             return null;
         }
     }

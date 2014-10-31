@@ -7,245 +7,143 @@ namespace GDBStub
 {
     class LoadStore : Instruction
     {
-        public bool R { get; set; }
+        // declare the magic bits
+        public bool b4 { get; set; }
+        public bool b25 { get; set; }
         public bool P { get; set; }
         public bool U { get; set; }
         public bool B { get; set; }
         public bool W { get; set; }
         public bool L { get; set; }
 
-        public ShifterOperand shiftOp { get; set; }
+        public Operand2 shifter { get; set; }
 
-        public override void ParseCommand(Memory command)
+        /// <summary>
+        /// Overwrites parent's ParseCommand Method
+        /// </summary>
+        /// <param name="cmd"></param>
+        public override void ParseCommand(Memory cmd)
         {
             //PUBWL
-            bool R = command.TestFlag(0, 25);
-            Rm = (command.ReadWord(0) & 0x0000000F);
-            this.shiftOp = new ShifterOperand(command);
+            b25 = cmd.TestFlag(0, 25);
+            b4 = cmd.TestFlag(0, 4);
+            Rm = (cmd.ReadWord(0) & 0x0000000F);
+            this.shifter = new Operand2(cmd);
 
-            if (!(command.TestFlag(0, 25) && command.TestFlag(0, 4)))
+            if (!(b25 && b4))
             {
-                this.R = command.TestFlag(0, 25);
-                this.P = command.TestFlag(0, 24);
-                this.U = command.TestFlag(0, 23);
-                this.B = command.TestFlag(0, 22);
-                this.W = command.TestFlag(0, 21);
-                this.L = command.TestFlag(0, 20);
+                this.b25 = cmd.TestFlag(0, 25);
+                this.P = cmd.TestFlag(0, 24);
+                this.U = cmd.TestFlag(0, 23);
+                this.B = cmd.TestFlag(0, 22);
+                this.W = cmd.TestFlag(0, 21);
+                this.L = cmd.TestFlag(0, 20);
             }
         }
 
-        public override void Run(ref Register[] reg, ref Memory RAM)
+        /// <summary>
+        /// The run method for Load Store.
+        /// Overwrites parent's method
+        /// </summary>
+        /// <param name="ra"></param>
+        /// <param name="mem"></param>
+        public override void Run(Register[] ra, Memory mem)
         {
-            //base.run(ref reg, ref RAM);
-            Logger.Instance.writeLog(string.Format("CMD: Data Movement : 0x{0}", Convert.ToString(this.initial, 16)));
+            Logger.Instance.writeLog(string.Format("Command Type: Data Movement : 0x{0}", Convert.ToString(this.initialBytes, 16)));
 
-            //from register info to memory!!!
-            // --->
-            uint RdValue = reg[this.Rd].ReadWord(0, true);
-            uint RnValue = reg[this.Rn].ReadWord(0, true);
-            uint RmValue = reg[this.Rm].ReadWord(0, true);
+            // Gather information about registers
+            uint RdVal = ra[this.Rd].ReadWord(0, true);
+            uint RnVal = ra[this.Rn].ReadWord(0, true);
+            uint RmVal = ra[this.Rm].ReadWord(0, true);
 
-            this.shiftOp = loadStoreShift(this.R, this.shiftOp, RmValue, reg);
+            this.shifter = HandleShift(this.b25, this.shifter, RmVal, ra);
             //addressing mode
-            uint addr = AddressingMode(ref reg);
+            uint addr = FindAddressingMode(ref ra);
             string cmd = "";
+            
+            // Check for Load / Store
             if (this.L)
             {
                 cmd = "ldr";
                 if (this.B)
-                {
-                    byte inpu = RAM.ReadByte(addr);
-                    //clear it out first
-                    reg[this.Rd].WriteWord(0, 0);
-
-                    reg[this.Rd].WriteByte(0, inpu);
-
+                {                    
+                    ra[this.Rd].WriteWord(0, 0);
+                    ra[this.Rd].WriteByte(0, mem.ReadByte(addr));
                 }
                 else
                 {
-                    uint inpu = RAM.ReadWord(addr);
-                    reg[this.Rd].WriteWord(0, inpu);
+                    ra[this.Rd].WriteWord(0, mem.ReadWord(addr));
                 }
             }
+            // If not load then store
             else
             {
                 cmd = "str";
                 if (this.B)
-                {
-                    byte inpu = reg[this.Rd].ReadByte(0);
-                    RAM.WriteByte(addr, inpu);
+                {                   
+                    mem.WriteByte(addr, ra[this.Rd].ReadByte(0));
                 }
                 else
                 {
-                    RAM.WriteWord(addr, RdValue);
+                    mem.WriteWord(addr, RdVal);
                 }
             }
 
-            Logger.Instance.writeLog(string.Format("CMD: {0} {1}, 0x{2} : 0x{3} ", cmd, RdValue,
-                Convert.ToString(addr, 16), Convert.ToString(this.initial, 16)));
+            Logger.Instance.writeLog(string.Format("Specific Command: {0} {1}, 0x{2} : 0x{3} ", cmd, RdVal,
+                Convert.ToString(addr, 16), Convert.ToString(this.initialBytes, 16)));
         }
 
-        public ShifterOperand loadStoreShift(bool R, ShifterOperand shiftOp, uint RmValue, Register[] reg)
+        /// <summary>
+        /// Deal with some of the knitty gritty that happens
+        /// when we deal with operand2
+        /// </summary>
+        /// <param name="b25"></param>
+        /// <param name="shifter"></param>
+        /// <param name="RmVal"></param>
+        /// <param name="ra"></param>
+        /// <returns></returns>
+        public Operand2 HandleShift(bool b25, Operand2 shifter, uint RmVal, Register[] ra)
         {
-            if (R)
-            {
-                //it's a register
-                shiftOp = Shift(!R, shiftOp, RmValue, reg);
-            }
-            else
-            {
-                //it's an immediate 12 bit value
-                shiftOp.offset = shiftOp.immed_12;
-            }
-
-            return shiftOp;
+            // if this bit is set then we are dealing with a register
+            if (b25) {shifter = Shift(!b25, shifter, RmVal, ra);}
+            
+            // otherwise it is an immediate value
+            else {shifter.offset = shifter.imm12;}
+            return shifter;
         }
 
-        private uint AddressingMode(ref Register[] reg)
+        /// <summary>
+        /// Finds out addressing specifics about the instruction
+        /// </summary>
+        /// <param name="reg"></param>
+        /// <returns></returns>
+        private uint FindAddressingMode(ref Register[] reg)
         {
-            uint RdValue = reg[this.Rd].ReadWord(0, true);
-            uint RnValue = reg[this.Rn].ReadWord(0, true);
+            uint RdVal = reg[this.Rd].ReadWord(0, true);
+            uint RnVal = reg[this.Rn].ReadWord(0, true);
             uint addr = 0;
+            
+            // if pre-indexed....
             if (this.P)
             {
-                if (this.U)
-                {
-                    addr = RnValue + this.shiftOp.offset;
-                }
-                else
-                {
-                    addr = RnValue - this.shiftOp.offset;
-                }
+                // ... and positively offset add offset to value
+                // otherwise we need to subtract
+                addr = (this.U) ? RnVal + this.shifter.offset : RnVal - this.shifter.offset;               
 
-                //offset addressing
+                // check for writeback
                 if (this.W)
                 {
-                    //pre-indexed
                     reg[this.Rn].WriteWord(0, addr);
                 }
             }
+            // otherwise post-indexed
             else
             {
-                //post-indexed addressing
-                addr = RnValue;
-                if (this.U)
-                {
-                    reg[this.Rn].WriteWord(0, RnValue + this.shiftOp.offset);
-                }
-                else
-                {
-                    reg[this.Rn].WriteWord(0, RnValue - this.shiftOp.offset);
-                }
+                addr = RnVal;
+                uint val = (this.U) ? RnVal + this.shifter.offset : RnVal - this.shifter.offset;
+                reg[this.Rn].WriteWord(0, val);                
             }
             return addr;
         }
-    }
-
-    class LoadStoreMultiple : LoadStore
-    {
-        public bool[] regFlags { get; set; }
-
-        public override void ParseCommand(Memory command)
-        {
-            // dataMoveMultiple this = (dataMoveMultiple)parseLoadStore(command);
-            this.regFlags = new bool[16];
-            this.R = command.TestFlag(0, 25); ;
-            this.P = command.TestFlag(0, 24);
-            this.U = command.TestFlag(0, 23);
-            this.B = command.TestFlag(0, 22);
-            this.W = command.TestFlag(0, 21);
-            this.L = command.TestFlag(0, 20);
-            for (byte i = 0; i < 16; ++i)
-            {
-                this.regFlags[i] = command.TestFlag(0, i);
-            }
-        }
-
-        public override void Run(ref Register[] reg, ref Memory RAM)
-        {
-            Logger.Instance.writeLog(string.Format("CMD: Data Move Multiple : 0x{0}", Convert.ToString(this.initial, 16)));
-
-            int RnVal = (int)reg[this.Rn].ReadWord(0, true);
-            uint numReg = 0;
-            string Scom = "";
-            string registers = "";
-
-            if (this.U)
-            {
-                //go up in memory!
-                if (this.P)
-                {
-                    //RnVal excluded
-                    RnVal += 4;
-                }
-
-                for (int i = 0; i < 16; ++i)
-                {
-                    if (this.regFlags[i])
-                    {
-                        if (this.L)
-                        {
-                            reg[i].WriteWord(0, RAM.ReadWord((uint)RnVal));
-
-                            Scom = "ldm";
-                        }
-                        else
-                        {
-                            RAM.WriteWord((uint)RnVal, reg[i].ReadWord(0, true));
-
-                            Scom = "stm";
-                        }
-                        RnVal += 4;
-                        registers += string.Format(", r{0}", i);
-                        ++numReg;
-                    }
-                }
-            }
-            else
-            {
-                //go down in memory
-                if (this.P)
-                {
-                    //RnVal excluded
-                    RnVal -= 4;
-                }
-
-                for (int i = 15; i > -1; --i)
-                {
-                    if (this.regFlags[i])
-                    {
-                        if (this.L)
-                        {
-                            reg[i].WriteWord(0, RAM.ReadWord((uint)RnVal));
-                            Scom = "ldm";
-                        }
-                        else
-                        {
-                            RAM.WriteWord((uint)RnVal, reg[i].ReadWord(0, true));
-                            Scom = "stm";
-                        }
-                        RnVal -= 4;
-                        registers += string.Format(", r{0}", i);
-                        ++numReg;
-                    }
-                }
-            }
-
-            if (this.W)
-            {
-                uint n;
-                if (this.U)
-                {
-                    n = reg[this.Rn].ReadWord(0, true) + (4 * numReg);
-                }
-                else
-                {
-                    n = reg[this.Rn].ReadWord(0, true) - (4 * numReg);
-                }
-                reg[this.Rn].WriteWord(0, n);
-            }
-
-            Logger.Instance.writeLog(string.Format("CMD: {0} r{1}{2}", Scom, this.Rn, registers));
-        }
-    }
+    } 
 }

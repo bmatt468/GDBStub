@@ -27,12 +27,9 @@ namespace GDBStub
 
                 //runs test cases
                 if (Option.Instance.test)
-                {                   
-                    TestRam.RunTests();
-                    TestSimulator.RunTests();
-                    TestDecodeExecute TFDE = new TestDecodeExecute();
-                    TFDE.RunTests();
-
+                {
+                    TestSimulator LETSFINDOUT = new TestSimulator();
+                    LETSFINDOUT.IFTHISTHINGWORKS();
                     Logger.Instance.writeLog("TEST: Finished\n\n\n------------------------------");                    
                 }
 
@@ -60,7 +57,7 @@ namespace GDBStub
                     {
                         potentialHandlerIfTheRightFlagIsSet = new Handler();
                         Thread thisThreadWillHandleTheHandler_AKATheHandleHandler = new Thread(
-                            new ThreadStart(potentialHandlerIfTheRightFlagIsSet.StartReadOnly));
+                            new ThreadStart(potentialHandlerIfTheRightFlagIsSet.StartReadInteruptOnly));
                         thisThreadWillHandleTheHandler_AKATheHandleHandler.Start();
                     }
                     Computer.Instance.run();

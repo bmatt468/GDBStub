@@ -7,27 +7,31 @@ namespace GDBStub
 {
     class Branch : Instruction
     {
-        public bool LN { get; set; }
-        //23bit long offset
+        public bool L { get; set; }
+        //24 bit signed offset (signed_immed_24)
         public int offset { get; set; }
 
-        public override void ParseCommand(Memory command)
+        /// <summary>
+        /// Override parent's ParseCommand method
+        /// </summary>
+        /// <param name="cmd"></param>
+        public override void ParseCommand(Memory cmd)
         {
-            this.LN = command.TestFlag(0, 24);
-            this.offset = ((int)command.ReadWord(0, true) & 0x00FFFFFF) << 2;
+            this.L = cmd.TestFlag(0, 24);
+            this.offset = ((int)cmd.ReadWord(0, true) & 0x00FFFFFF) << 2;
         }
 
-        public override void Run(ref Register[] reg, ref Memory RAM)
+        public override void Run(Register[] ra, Memory mem)
         {
-            uint curAddr = reg[15].ReadWord(0, true);
-            if (this.LN)
+            uint initialAddress = ra[15].ReadWord(0, true);
+            if (this.L)
             {
-                //store a return address
-                reg[14].WriteWord(0, curAddr);
+                //store return address for post-branch
+                ra[14].WriteWord(0, initialAddress);
             }
-            uint newAddress = (uint)(curAddr + this.offset);
-            reg[15].WriteWord(0, newAddress);
-            Logger.Instance.writeLog(string.Format("CMD: BX 0x{0} : 0x{1}", newAddress, Convert.ToString(this.initial, 16)));
+            uint branchAddress = (uint)(initialAddress + this.offset);
+            ra[15].WriteWord(0, branchAddress);
+            Logger.Instance.writeLog(string.Format("Assembly: BX 0x{0} : 0x{1}", branchAddress, Convert.ToString(this.initialBytes, 16)));
         }
     }
 }

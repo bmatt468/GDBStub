@@ -74,7 +74,7 @@ namespace GDBStub
             //activate trace for the first time
             //trace = new StreamWriter("trace.log", false);
 
-            this.cpu = new CPU(ref RAM,ref reg);
+            this.cpu = new CPU(RAM,reg);
         }
 
 
@@ -173,22 +173,23 @@ namespace GDBStub
         private bool isBreakPoint(Memory rawInstruction)
         {
             bool output = false;
-            if (!rawInstruction.TestFlag(0,27) &&
-                !rawInstruction.TestFlag(0,26) &&
-                !rawInstruction.TestFlag(0,25) &&
-                rawInstruction.TestFlag(0,24) &&
-                !rawInstruction.TestFlag(0,23) &&
-                !rawInstruction.TestFlag(0,22) &&
-                rawInstruction.TestFlag(0,21) &&
-                !rawInstruction.TestFlag(0,20) &&
-                rawInstruction.TestFlag(0,7) &&
-                !rawInstruction.TestFlag(0,6) &&
-                !rawInstruction.TestFlag(0,5) &&
-                !rawInstruction.TestFlag(0,4))
-                output = true;
-            
+            if (!rawInstruction.TestFlag(0, 27) &&
+                !rawInstruction.TestFlag(0, 26) &&
+                !rawInstruction.TestFlag(0, 25) &&
+                rawInstruction.TestFlag(0, 24) &&
+                !rawInstruction.TestFlag(0, 23) &&
+                !rawInstruction.TestFlag(0, 22) &&
+                rawInstruction.TestFlag(0, 21) &&
+                !rawInstruction.TestFlag(0, 20) &&
+                !rawInstruction.TestFlag(0, 7) &&
+                rawInstruction.TestFlag(0, 6) &&
+                rawInstruction.TestFlag(0, 5) &&
+                rawInstruction.TestFlag(0, 4)) { output = true; }
+
             return output;
         }
+        
+
 
 //-------------- End Getters//
 
@@ -354,7 +355,15 @@ namespace GDBStub
             {
                 output = -2;
                 Logger.Instance.writeLog("Err: File not found");
-                System.Environment.Exit(1);
+                if(Option.Instance.test)
+                {
+                    throw new FileNotFoundException();
+                }
+                else
+                {
+                    System.Environment.Exit(1);
+                }
+                
             }
             catch //general exception
             {
@@ -511,7 +520,7 @@ namespace GDBStub
                 do
                 {
                     //fetch, decode, execute commands here
-                    Memory rawInstruction = cpu.fetch();
+                    Memory rawInstruction = cpu.Fetch();
                     Logger.Instance.writeLog(string.Format("CMD: #{0} = 0x{1}", this.step_number, Convert.ToString(rawInstruction.ReadWord(0), 16)));
                     //break if we fetched a zero!
                     //will change to a finish command like .exit
@@ -522,11 +531,11 @@ namespace GDBStub
                             if (!isBreakPoint(rawInstruction))
                             {
                                 //decode the uint!
-                                Instruction cookedInstruction = cpu.decode(rawInstruction);
+                                Instruction cookedInstruction = cpu.Decode(rawInstruction);
 
                                 //exeucte the decoded Command!!
                                 bool[] flags = {N, Z, C, F};
-                                if ((flags = cpu.execute(cookedInstruction, flags)) != null)
+                                if ((flags = cpu.Execute(cookedInstruction, flags)) != null)
                                 {
                                     this.N = flags[0];
                                     this.Z = flags[1];

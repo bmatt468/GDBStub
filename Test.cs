@@ -12,283 +12,311 @@ using System.Timers;
 
 namespace GDBStub
 {
-    public class TestSimulator
+    class TestSimulator
     {
+        public ELFReader e { get; set; }
+        public Memory mem { get; set; }
+        public Computer comp { get; set; }
+        public Register[] reg { get; set; }
+        public CPU cpu { get; set; }
+        public string resultHash { get; set; }
+        public string hash { get; set; }
 
-        public static void RunTests()
+
+        public TestSimulator()
         {
-            //append
-
-            ELFReader e = new ELFReader();
-            Memory ram = new Memory(32768);
-            Computer comp = new Computer();
-            Logger.Instance.closeTrace();
-            Logger.Instance.writeLog("Test: Starting Simulator unit tests");
-
-            Logger.Instance.writeLog("Test: Testing Hash of test1.exe");
-            comp.load("test1.exe", 32768);
-
-            string resultHash = comp.getRAM().getHash();
-            string hash = "3500a8bef72dfed358b25b61b7602cf1";
-
-            Debug.Assert(hash.ToUpper() == resultHash);
-            /*
-            Logger.Instance.writeLog("Test: Testing BreakPoint");
-
-            uint bPoint = comp.getReg(15).ReadWord(0) + 8;
-            comp.setBreakPoint(bPoint);
-            
-            comp.step();
-            comp.step();
-            
-            //System.Threading.Thread.Sleep(10000);
-            Logger.Instance.writeLog("Test: Hit Break Point");
-            Debug.Assert(comp.compStatus.statchar == 'S');
-            Debug.Assert(comp.compStatus.statval == "05");
-            uint pc = comp.getReg(15).ReadWord(0);
-            comp.step();
-            Debug.Assert(pc == comp.getReg(15).ReadWord(0));
-
-            comp.removeBreakPoint(bPoint);
-            comp.step();
-            Debug.Assert(pc < comp.getReg(15).ReadWord(0));
-            comp.run();
-            while (comp.compStatus.statchar != 'W')
-            { ;}
-
-            Debug.Assert(comp.compStatus.statchar == 'W');
-            Debug.Assert(comp.compStatus.statval == "00");
-            Logger.Instance.writeLog("Test: Removed Break Point");
-             */
-
-            comp.CLEAR();
-
-            Logger.Instance.writeLog("Test: Testing Hash of test2.exe");
-            comp.load("test2.exe", 32768);
-            resultHash = comp.getRAM().getHash();
-
-            hash = "0a81d8b63d44a192e5f9f52980f2792e";
-
-            Debug.Assert(hash.ToUpper() == resultHash);
-            
-
-            comp.CLEAR();
-
-            Logger.Instance.writeLog("Test: Testing Hash of test3.exe");
-            comp.load("test3.exe", 32768);
-
-
-            resultHash = comp.getRAM().getHash();
-            hash = "977159b662ac4e450ed62063fba27029";
-
-            Debug.Assert(hash.ToUpper() == resultHash);
-            
-            Logger.Instance.writeLog("Test: All Hashes correct\n");
-
-            //Logger.Instance.toggleTrace();
-            comp.reset();
-
+            e = new ELFReader();
+            mem = new Memory(32768);
+            comp = new Computer();
+            reg = new Register[16];
+            resultHash = "";
+            hash = "";
+        }
+        
+        public void TestFail(string msg) 
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Logger.Instance.writeLog(msg);
+            Console.WriteLine(msg);
+            Console.ResetColor();
         }
 
-    }
-
-    public class TestRam
-    {
-
-        public static void RunTests()
+        public void TestWarn(string msg)
         {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Logger.Instance.writeLog(msg);
+            Console.WriteLine(msg);
+            Console.ResetColor();
+        }
 
-            //append
-            Logger.Instance.writeLog("Test: Starting RAM unit tests");
-            Memory tram = new Memory(32768);
-            Logger.Instance.closeTrace();
+        public void TestPass(string msg)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Logger.Instance.writeLog(msg);
+            Console.WriteLine(msg);
+            Console.ResetColor();
+        }
 
-            Logger.Instance.writeLog("Test: Read/Write Byte");
-            byte byteRes = tram.ReadByte(0);
-            Debug.Assert(byteRes == 0);
-            tram.WriteByte(0, 0xee);
-            byteRes = tram.ReadByte(0);
-            Debug.Assert(byteRes == 0xee);
+        public void Output(string msg)
+        {
+            Logger.Instance.writeLog(msg);
+            Console.WriteLine(msg);
+        }
 
-            tram.CLEAR();
+        private void TestCommand(uint bytes)
+        {
+            mem.WriteWord(0, bytes);
+            reg[15].WriteWord(0, 0);
+            Memory m = cpu.Fetch();
+            Debug.Assert(m.ReadWord(0) == bytes);
+            if (!(m.ReadWord(0) == bytes))
+            {
+                this.TestFail("ERROR: Fetch failed");
+            }
+            else 
+            {
+                this.TestPass("Fetch Passed");
+            }
+            Instruction i = cpu.Decode(m);
+            bool[] flags = { false, false, false, false };
+            cpu.Execute(i, flags);
+        }
 
-            Logger.Instance.writeLog("Test: Read/Write HalfWord");
-            ushort shortRes = tram.ReadHalfWord(0);
-            Debug.Assert(shortRes == 0);
-            tram.WriteHalfWord(0, 0xeef);
-            shortRes = tram.ReadHalfWord(0);
-            Debug.Assert(shortRes == 0xeef);
+        public void IFTHISTHINGWORKS()
+        {
+            this.Output("_____Beginning Tests_____");
+            this.Output("Console Running in Verbatim Mode for Unit Tests");
+            this.Output("Beginning Hash Test");
+            
+            this.Output("Testing hash of test1.exe");
+            try
+            {
+                comp.load("test1.exe", 32768);
+                resultHash = comp.getRAM().getHash();
+                hash = "3500a8bef72dfed358b25b61b7602cf1";
 
-            tram.CLEAR();
+                if (hash.ToUpper() == resultHash)
+                {
+                    this.TestPass("test1.exe hash passed");
+                }
+                else
+                {
+                    this.TestFail("ERROR: test1.exe hash failed");
+                }
+            }
+            catch (FileNotFoundException)
+            {
+                this.TestWarn("WARNING: test1.exe not found. Test bypassed");
+            }            
+            comp.CLEAR();
+            //
+            this.Output("Testing hash of test2.exe");
+            try
+            {
+                comp.load("test2.exe", 32768);
+                resultHash = comp.getRAM().getHash();
+                hash = "0a81d8b63d44a192e5f9f52980f2792e";
+                if (hash.ToUpper() == resultHash)
+                {
+                    this.TestPass("test2.exe hash passed");
+                }
+                else
+                {
+                    this.TestFail("ERROR: test2.exe hash failed");
+                }
+            }
+            catch (Exception)
+            {
+                this.TestWarn("WARNING: test2.exe not found. Test bypassed");
+            }            
+            comp.CLEAR();
+            //
+            this.Output("Testing hash of test3.exe");
+            try
+            {
+                comp.load("test3.exe", 32768);
+                resultHash = comp.getRAM().getHash();
+                hash = "977159b662ac4e450ed62063fba27029";
 
-            Logger.Instance.writeLog("Test: Read/Write Word");
-            uint intRes = tram.ReadWord(0);
-            Debug.Assert(intRes == 0);
-            tram.WriteWord(0, 0xabcdef);
-            intRes = tram.ReadWord(0);
-            Debug.Assert(intRes == 0xabcdef);
+                if (hash.ToUpper() == resultHash)
+                {
+                    this.TestPass("test2.exe hash passed");
+                }
+                else
+                {
+                    this.TestFail("ERROR: test3.exe hash failed");
+                }
+            }
+            catch (Exception)
+            {
+                this.TestWarn("WARNING: test3.exe not found. Test bypassed");
+            }
+            comp.CLEAR();
+            this.Output("End hash test");
+            
+            this.Output("Beginning RAM tests");
+            this.Output("Testing Read/Write Byte");
+            byte bytetest = mem.ReadByte(0);
+            if (!(bytetest == 0))
+            {
+                this.TestFail("ERROR: Read/Write Byte fail");
+            }
+            mem.WriteByte(0, 0xfd);
+            bytetest = mem.ReadByte(0);
+            if (!(bytetest == 0xfd))
+            {
+                this.TestFail("ERROR: Read/Write Byte fail");
+            }
+            else
+            {
+                this.TestPass("Read/Write Byte passed");
+            }
+            mem.CLEAR();
 
-            tram.CLEAR();
+            this.Output("Testing Read/Write HalfWord");
+            ushort shorttest = mem.ReadHalfWord(0);            
+            if (!(shorttest == 0))
+            {
+                this.TestFail("ERROR: Read/Write HalfWord fail");
+            }
+            mem.WriteHalfWord(0, 0xabc);
+            shorttest = mem.ReadHalfWord(0);
+            if (!(shorttest == 0xabc))
+            {
+                this.TestFail("ERROR: Read/Write HalfWord fail");
+            }
+            else
+            {
+                this.TestPass("Read/Write HalfWord passed");
+            }
+            mem.CLEAR();
 
-            Logger.Instance.writeLog("Test: Set/Test Flag");
+            this.Output("Testing Read/Write Word");
+            uint inttest = mem.ReadWord(0);
+            if (!(inttest == 0))
+            {
+                this.TestFail("ERROR: Read/Write Word fail");
+            }
+            mem.WriteWord(0, 0xabc123);
+            inttest = mem.ReadWord(0);
+            if (!(inttest == 0xabc123))
+            {
+                this.TestFail("ERROR: Read/Write Word fail");
+            }
+            else
+            {
+                this.TestPass("Read/Write Word passed");
+            }
+            mem.CLEAR();            
+            
+            this.Output("Testing Set/Test Flag");
 
-            bool flagRes = tram.TestFlag(0, 4);
-            Debug.Assert(flagRes == false);
+            bool flagtest = mem.TestFlag(0, 4);            
+            if (!(flagtest == false))
+            {
+                this.TestFail("ERROR: Flag test failed");
+            }
+            else
+            {
+                this.TestPass("Flag test test passed");
+            }
 
-            //set a false flag true
-            tram.SetFlag(0, 4, true);
-            flagRes = tram.TestFlag(0, 4);
-            Debug.Assert(flagRes == true);
+            //false >> true
+            mem.SetFlag(0, 4, true);
+            flagtest = mem.TestFlag(0, 4);
+            if (!(flagtest == true))
+            {
+                this.TestFail("ERROR: Flag test failed");
+            }
+            else
+            {
+                this.TestPass("Flag test test passed");
+            }
 
             // true >> true
-            tram.SetFlag(0, 4, true);
-            flagRes = tram.TestFlag(0, 4);
-            Debug.Assert(flagRes == true);
+            mem.SetFlag(0, 4, true);
+            flagtest = mem.TestFlag(0, 4);
+            if (!(flagtest == true))
+            {
+                this.TestFail("ERROR: Flag test failed");
+            }
+            else
+            {
+                this.TestPass("Flag test test passed");
+            }
 
             // true >> false
-            tram.SetFlag(0, 4, false);
-            flagRes = tram.TestFlag(0, 4);
-            Debug.Assert(flagRes == false);
+            mem.SetFlag(0, 4, false);
+            flagtest = mem.TestFlag(0, 4);
+            if (!(flagtest == false))
+            {
+                this.TestFail("ERROR: Flag test failed");
+            }
+            else
+            {
+                this.TestPass("Flag test test passed");
+            }
 
             // false >> false
-            tram.SetFlag(0, 4, false);
-            flagRes = tram.TestFlag(0, 4);
-            Debug.Assert(flagRes == false);
+            mem.SetFlag(0, 4, false);
+            flagtest = mem.TestFlag(0, 4);
+            if (!(flagtest == false))
+            {
+                this.TestFail("ERROR: Flag test failed");
+            }
+            else
+            {
+                this.TestPass("Flag test test passed");
+            }
 
-            Logger.Instance.writeLog("Test: All Ram Tests passed\n");
+            this.Output("All Ram Tests completed");
             Logger.Instance.closeTrace();
-            tram.CLEAR();
+            mem.CLEAR();
 
+            this.Output("Starting CPU unit tests");            
+            //0xe3a02030 mov r2, #48
+            //defines 16 registers, 0 - 15
+            for (int i = 0; i < 16; i++)
+            {
+                reg[i] = new Register();
+            }
+            // create cpu
+            cpu = new CPU(mem, reg);
+            // build instruction
+            this.Output("Test Command: MOV R1,4016 : 0xe3a01efb");
+            this.TestCommand(0xe3a01efb);
+            if (!(reg[1].ReadWord(0) == 4016))
+            {
+                this.TestFail("ERROR: MOV Execution failed");
+            }
+            else
+            {
+                this.TestPass("MOV Execution passed");
+            }
+
+            this.Output("Test Command: ADD r10, r3, #9 : 0xe283A009");
+            reg[3].WriteWord(0, 1);
+            this.TestCommand(0xe283A009);
+            if (!(reg[10].ReadWord(0) == 10))
+            {
+                this.TestFail("ERROR: ADD Execution failed");
+            }
+            else
+            {
+                this.TestPass("ADD Execution passed");
+            }
+
+            this.Output("Test Command: SUB r1, r10, #3 : 0xe24A1003");
+            this.TestCommand(0xe24A1003);
+            if (!(reg[1].ReadWord(0) == 7))
+            {
+                this.TestFail("ERROR: SUB Execution failed");
+            }
+            else
+            {
+                this.TestPass("SUB Execution passed");
+            }
+            this.Output("All Decode/Execute Tests Finished"); 
         }
-
-    }
-
-
-    public class TestDecodeExecute
-    {
-
-        Memory RAM = new Memory();
-        Register[] reg = new Register[16];
-        CPU cpu;
-        public void RunTests()
-                {
-                    //append
-                    Logger.Instance.writeLog("Test: Starting Decode Execute unit tests");
-            
-                    Logger.Instance.closeTrace();
-                    //0xe3a02030 mov r2, #48
-                    //defines 16 registers, 0 - 15
-                    for (int i = 0; i < 16; i++)
-                    {
-                       reg[i] = new Register();
-                    }
-
-                    cpu = new CPU(ref RAM, ref reg);
-                    
-                    //put the instruction into memory
-
-                    Logger.Instance.writeLog("TEST: mov r2, #48 : 0xe3a02030");
-                    this.runCommand(0xe3a02030);
-
-                    Debug.Assert(reg[2].ReadWord(0) == 48);
-                    Logger.Instance.writeLog("TEST: Executed");
-
-
-                    Logger.Instance.writeLog("TEST: mov r0, r3 : 0xe1a00003");
-                    reg[3].WriteWord(0, 3);
-
-                    this.runCommand(0xe1a00003);
-                    
-                    Debug.Assert(reg[0].ReadWord(0) == 3);
-                    Logger.Instance.writeLog("TEST: Executed");
-
-                    Logger.Instance.writeLog("TEST: mov r0, r3 lsl #4 : 0xe1a00403");
-                    reg[3].WriteWord(0, 3);
-        
-                    this.runCommand(0xe1a00403);
-                  
-                    Debug.Assert(reg[0].ReadWord(0) == 0x300);
-                    Logger.Instance.writeLog("TEST: Executed");
-
-                    //test 0xe28db004 add r9, r8, #4
-                    reg[8].WriteWord(0, 10);
-                    this.runCommand(0xe2889004);
-
-                    Debug.Assert(reg[9].ReadWord(0) == 14);
-                    Logger.Instance.writeLog("TEST: Add");
-
-                    //test 0xe24dd008 sub r13, r13, #8
-                    reg[13].WriteWord(0, 10);
-                    this.runCommand(0xe24dd008);
-                    Debug.Assert(reg[13].ReadWord(0) == 2);
-                    Logger.Instance.writeLog("TEST: Sub");
-
-                    //test 0xeb000006 bxl 6;
-
-                    reg[15].WriteWord(0, 0);
-                    reg[14].WriteWord(0, 48);
-                    this.runCommand(0xeb000006);
-                    Debug.Assert(reg[15].ReadWord(0) == 24);
-                    Debug.Assert(reg[14].ReadWord(0) == 0);
-                    Logger.Instance.writeLog("TEST: Branch");
-
-
-
-                    //test 0xe92d4800 strm r1, r14, r11 U = 0 P = 1 W = 1
-                    reg[11].WriteWord(0, 0x4F3);
-                    reg[14].WriteWord(0, 0x48);
-                    reg[1].WriteWord(0, 0x20);
-                    this.runCommand(0xe9214800);
-
-            //lower register is always lower in memory
-                    Debug.Assert(RAM.ReadWord(0x18) == 0x4F3);
-                    Debug.Assert(RAM.ReadWord(0x1c) == 0x48);
-                    Debug.Assert(reg[1].ReadWord(0) == 24);
-
-                    //test 0xe88d4800 strm r13, r14, r11 U = 1 P = 0 W = 0
-                    reg[11].WriteWord(0, 0x4F3);
-                    reg[14].WriteWord(0, 0x48);
-                    reg[1].WriteWord(0, 0x20);
-                    this.runCommand(0xe8814800);
-
-                    Debug.Assert(RAM.ReadWord(0x20) == 0x4f3);
-                    Debug.Assert(RAM.ReadWord(0x24) == 0x48);
-                    Debug.Assert(reg[1].ReadWord(0) == 0x20);
-                    Logger.Instance.writeLog("TEST: Store Multiple");
-
-                    Logger.Instance.writeLog("TEST: All Decode/Execute Tests Passed");
-
-                    Logger.Instance.closeTrace();
- 
-                }
-
-        private void runCommand(uint p)
-        {
-            RAM.WriteWord(0, p);
-
-            //get the program counter to point at the test command
-            reg[15].WriteWord(0, 0);
-
-            //fetch, decode, execute commands here
-            Memory rawInstruction = cpu.fetch();
-
-            /// make sure we fetched the right hting
-            Debug.Assert(rawInstruction.ReadWord(0) == p);
-
-            Logger.Instance.writeLog("TEST: Fetched");
-
-
-            //decode the uint!
-            Instruction cookedInstruction = cpu.decode(rawInstruction);
-           // Debug.Assert(cookedInstruction is dataManipulation);
-            Logger.Instance.writeLog("TEST: Decoded");
-
-            //exeucte the decoded Command!!
-            bool[] flags = {false,false, false,false};
-            cpu.execute(cookedInstruction, flags);
-
-        }//runTests
-
-    }//testDecodeExecute
-
-}//namespace
+    }    
+}

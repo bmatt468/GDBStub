@@ -13,13 +13,14 @@ namespace GDBStub
     {
 
         public bool interput { get; set; }
+        public bool running { get; set; }
         public void Start()
         {
             Listen();
             interput = false;
 
         }
-        public void StartReadOnly()
+        public void StartReadInteruptOnly()
         {
             Listen(iOnlyWantToReadDataPlz:true);
             interput = false;
@@ -311,6 +312,18 @@ namespace GDBStub
                         //this.Respond("PacketSize=79", ns);
                         this.Respond("", ns);
                     }
+                    else if (cmd.StartsWith("qRcmd"))
+                    {
+                        if (Logger.Instance.toggleTrace())
+                        {
+                            this.Respond("+", ns);
+                        }
+                        else
+                        {
+                            this.Respond("-", ns);
+                        }
+                    }
+
 
                     break;
 
