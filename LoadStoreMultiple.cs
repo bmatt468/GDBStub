@@ -24,7 +24,7 @@ namespace GDBStub
             }
         }
 
-        public override void Run(Register[] ra, Memory mem)
+        public override void Run(ref Register[] ra, ref Memory mem)
         {
             Logger.Instance.writeLog(string.Format("Command Type: Data Move Multiple : 0x{0}", Convert.ToString(this.initialBytes, 16)));
 

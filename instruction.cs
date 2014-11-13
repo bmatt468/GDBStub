@@ -107,10 +107,10 @@ namespace GDBStub
         /// </summary>
         /// <param name="reg"></param>
         /// <param name="RAM"></param>
-        public virtual void Run(Register[] reg, Memory RAM)
+        public virtual void Run(ref Register[] reg, ref Memory RAM)
         {
             Logger.Instance.writeLog("Warning: Unkown Command");
-        }
+        }       
 
         /// <summary>
         /// This is responsible for the shifts that have
@@ -142,10 +142,10 @@ namespace GDBStub
         /// <returns></returns>
         public bool checkCond(bool[] flagArray)
         {
-            bool N = flagArray[0];
-            bool Z = flagArray[1];
-            bool C = flagArray[2];
-            bool F = flagArray[3];
+            N = flagArray[0];
+            Z = flagArray[1];
+            C = flagArray[2];
+            F = flagArray[3];
             switch (Cond)
             {
                 case 0x0:
@@ -173,10 +173,10 @@ namespace GDBStub
                     if (!F) { return true; }
                     break;
                 case 0x8:
-                    if ((C && !F)) { return true; }
+                    if ((C && !Z)) { return true; }
                     break;
                 case 0x9:
-                    if ((!C && F)) { return true; }
+                    if ((!C && Z)) { return true; }
                     break;
                 case 0xa:
                     if ((N == F)) { return true; }

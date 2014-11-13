@@ -47,7 +47,7 @@ namespace GDBStub
         /// </summary>
         /// <param name="ra"></param>
         /// <param name="mem"></param>
-        public override void Run(Register[] ra, Memory mem)
+        public override void Run(ref Register[] ra, ref Memory mem)
         {
             Logger.Instance.writeLog(string.Format("Command Type: Data Movement : 0x{0}", Convert.ToString(this.initialBytes, 16)));
 

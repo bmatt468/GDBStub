@@ -62,8 +62,16 @@ namespace GDBStub
         public bool[] Execute(Instruction cmd, bool[] flags)
         {            
             if (cmd.checkCond(flags))
-            {
-                cmd.Run(_reg, _ram);                
+            {                
+                cmd.Run(ref _reg, ref _ram);
+                if (flags[0] != cmd.N || flags[1] != cmd.Z || flags[2] != cmd.C || flags[3] != cmd.F)
+                {
+                    flags[0] = cmd.N;
+                    flags[1] = cmd.Z;
+                    flags[2] = cmd.C;
+                    flags[3] = cmd.F;
+                    return flags;
+                }                
             }
             return null;
         }

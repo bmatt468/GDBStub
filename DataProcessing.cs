@@ -13,7 +13,7 @@ namespace GDBStub
         public bool b25 { get; set; }
         public Operand2 shifter { get; set; }
         public bool b4 { get; set; }
-        public bool b7 { get; set; }        
+        public bool b7 { get; set; }
 
         /// <summary>
         /// This method parses the command to get the valuable information
@@ -49,7 +49,7 @@ namespace GDBStub
         /// </summary>
         /// <param name="ra"></param>
         /// <param name="mem"></param>
-        public override void Run(Register[] ra, Memory mem)
+        public override void Run(ref Register[] ra, ref Memory mem)
         {
             string tempHexString = Convert.ToString(this.initialBytes, 16);
             Logger.Instance.writeLog(string.Format("Command Type: Data Manipulation 0x{0}", tempHexString));
@@ -152,11 +152,16 @@ namespace GDBStub
                     ra[this.Rd].WriteWord(0, this.shifter.offset);
                     Logger.Instance.writeLog(String.Format("Assembly: MOV R{0},{1} : 0x{2}",
                     this.Rd, this.shifter.offset, Convert.ToString(this.initialBytes, 16)));
+                    if (this.S)
+                    {
+                        flagWork(this.initialBytes, ra[this.Rd].ReadWord(0));
+                    }
                     break;
                 case "mvn":
                     ra[this.Rd].WriteWord(0, ~this.shifter.offset);
                     Logger.Instance.writeLog(String.Format("Assembly: MVN R{0},{1} : 0x{2}",
                     this.Rd, this.shifter.offset, Convert.ToString(this.initialBytes, 16)));
+                    flagWork(this.initialBytes, ra[this.Rd].ReadWord(0));
                     break;
                 case "oor":
                     ra[this.Rd].WriteWord(0, (source | this.shifter.offset));
@@ -187,9 +192,17 @@ namespace GDBStub
             m.WriteWord(0, comparer);
             //set N flag
             N = m.TestFlag(0, 31);
+            //set Z
             Z = m.ReadWord(0, true) == 0;
-            C = false;
-            F = false;
+            //set C
+            C = (this.shifter.offset <= source) ? true : false;
+            //set O (which somehow I though was F...)
+            int RnTest = (int)source;
+            int opTest = (int)this.shifter.offset;
+            bool case1 = ((RnTest >= 0) && (opTest < 0) && ((RnTest - opTest) < 0));
+            bool case2 = ((RnTest < 0) && (opTest >= 0) && ((RnTest - opTest) >= 0)); 
+            F = (case1 || case2) ? true : false;
+            
             Logger.Instance.writeLog(String.Format("Assembly: CMP R{0}, {1} : 0x{2}",
                 this.Rn, this.shifter.offset, Convert.ToString(this.initialBytes, 16)));
         }        
@@ -203,6 +216,25 @@ namespace GDBStub
             reg[this.Rn].WriteWord(0, product);
             Logger.Instance.writeLog(String.Format("Assembly: MUL R{0},R{1},R{2} : 0x{3}",
                 this.Rd, this.shifter.Rm, this.shifter.regShiftLength, Convert.ToString(this.initialBytes, 16)));
-        }       
+        }
+
+        private void flagWork(uint bytes, uint dest)
+        {
+            Memory m = new Memory(4);
+            m.WriteWord(0, bytes);
+            bool tempS = m.TestFlag(0, 20);
+            if (tempS)
+            {
+                Memory m2 = new Memory(4);
+                m2.WriteWord(0, dest);
+                //set N flag
+                N = m2.TestFlag(0, 31);
+                //set Z
+                Z = m2.ReadWord(0, true) == 0;
+                C = false;
+                F = false;
+                
+            }
+        }
     }
 }

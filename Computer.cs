@@ -31,7 +31,11 @@ namespace GDBStub
         
         //is running flag
         bool is_running = false;
-        bool N, Z, C, F = false;
+        public bool compN { get; set; }
+        public bool compZ { get; set; }
+        public bool compC { get; set; }
+        public bool compF { get; set; }
+        
         string checkSum = "";
         uint step_number = 1;
         Dictionary<uint, uint> storedCommands = new Dictionary<uint,uint>();
@@ -88,16 +92,16 @@ namespace GDBStub
             switch (flag)
             {
                 case 'N':
-                    output = N;
+                    output = compN;
                     break;
                 case 'Z':
-                    output = Z;
+                    output = compZ;
                     break;
                 case 'C':
-                    output = C;
+                    output = compC;
                     break;
                 case 'F':
-                    output = F;
+                    output = compF;
                     break;
                 default:
                     Logger.Instance.writeLog("FLAG: INVALID FLAG REQUESTED");
@@ -534,13 +538,13 @@ namespace GDBStub
                                 Instruction cookedInstruction = cpu.Decode(rawInstruction);
 
                                 //exeucte the decoded Command!!
-                                bool[] flags = {N, Z, C, F};
+                                bool[] flags = {compN, compZ, compC, compF};
                                 if ((flags = cpu.Execute(cookedInstruction, flags)) != null)
                                 {
-                                    this.N = flags[0];
-                                    this.Z = flags[1];
-                                    this.C = flags[2];
-                                    this.F = flags[3];
+                                    this.compN = flags[0];
+                                    this.compZ = flags[1];
+                                    this.compC = flags[2];
+                                    this.compF = flags[3];
                                 }
                                 else
                                 {
