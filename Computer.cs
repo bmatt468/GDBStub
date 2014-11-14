@@ -545,11 +545,15 @@ namespace GDBStub
                                     this.compZ = flags[1];
                                     this.compC = flags[2];
                                     this.compF = flags[3];
+                                    //this.RAM = null;
+                                    this.reg = cpu.GetReg();
+                                    
                                 }
                                 else
                                 {
                                     Logger.Instance.writeLog("CMD: Flags not updated");
                                 }
+                                
                                 Logger.Instance.writeTrace(this);
                                 Logger.Instance.writeLog("\n\n");
                                 step_number++;

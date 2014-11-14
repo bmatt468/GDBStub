@@ -19,6 +19,11 @@ namespace GDBStub
         private Memory _ram;
         private Register[] _reg;
 
+        public Register[] GetReg()
+        {
+            return _reg;
+        }
+        
         /// <summary>
         /// CPU constructor
         /// </summary>
@@ -62,8 +67,16 @@ namespace GDBStub
         public bool[] Execute(Instruction cmd, bool[] flags)
         {            
             if (cmd.checkCond(flags))
-            {                
+            {
+                for (int i = 0; i < _reg.Length; ++i)
+                {
+                    //Console.WriteLine("Reg " + i + " = " + Convert.ToString(_reg[i].ReadWord(0),16));
+                }
                 cmd.Run(ref _reg, ref _ram);
+                for (int i = 0; i < _reg.Length; ++i)
+                {
+                    //Console.WriteLine("Reg " + i + " = " + Convert.ToString(_reg[i].ReadWord(0), 16));
+                }
                 if (flags[0] != cmd.N || flags[1] != cmd.Z || flags[2] != cmd.C || flags[3] != cmd.F)
                 {
                     flags[0] = cmd.N;

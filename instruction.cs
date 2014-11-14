@@ -36,11 +36,21 @@ namespace GDBStub
             uint type = 0;
             // get type            
             type = (uint)((command.ReadByte(3) & 0x0c) >> 2);
+            //Console.WriteLine(Convert.ToString(command.ReadWord(0),2));
             switch (type)
-            {
+            {                
                 case 0:
                     // Data Processing  (00X)
-                    i = new DataProcessing();
+                    if (!command.TestFlag(0,25) 
+                        && command.TestFlag(0,24)
+                        && command.TestFlag(0,21))
+                    {
+                        i = new Branch();
+                    }
+                    else
+                    {
+                        i = new DataProcessing();
+                    }                    
                     break;
                 case 1:
                     // Load / Store (01X)
@@ -176,7 +186,7 @@ namespace GDBStub
                     if ((C && !Z)) { return true; }
                     break;
                 case 0x9:
-                    if ((!C && Z)) { return true; }
+                    if ((!C || Z)) { return true; }
                     break;
                 case 0xa:
                     if ((N == F)) { return true; }

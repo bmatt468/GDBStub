@@ -11,6 +11,7 @@ namespace GDBStub
         //24 bit signed offset (signed_immed_24)
         public int offset { get; set; }
         public bool imm { get; set; }
+        public uint regnum { get; set; }
 
         /// <summary>
         /// Override parent's ParseCommand method
@@ -24,10 +25,11 @@ namespace GDBStub
             && (0x10 & cmd.ReadByte(0)) == 0x10)
             {
                 imm = false;
-                this.Rn = (cmd.ReadWord(0) & 0xF);
+                this.regnum = (cmd.ReadWord(0) & 0xF);
             }
             else
             {
+                imm = true;
                 this.L = cmd.TestFlag(0, 24);
                 bool signed = cmd.TestFlag(0, 23);
                 uint tempbits = cmd.ReadWord(0,true);
@@ -55,7 +57,7 @@ namespace GDBStub
             }
             else
             {
-                addressToWhichWeBranch = (ra[this.Rn].ReadWord(0, true) & 0xFFFFFFFE);
+                addressToWhichWeBranch = (ra[this.regnum].ReadWord(0, true) & 0xFFFFFFFE);
             }
 
             addressToWhichWeBranch -= 4;
