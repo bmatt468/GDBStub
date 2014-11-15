@@ -59,8 +59,7 @@ namespace GDBStub
             this.shifter = HandleShift(this.b25, this.shifter, RmVal, ra);
             //addressing mode
             uint addr = FindAddressingMode(ref ra);
-            string cmd = "";
-            
+            string cmd = "";            
             // Check for Load / Store
             if (this.L)
             {

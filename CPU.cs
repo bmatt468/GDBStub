@@ -62,8 +62,7 @@ namespace GDBStub
         /// </summary>
         /// <param name="cmd"></param>
         /// <param name="flags"></param>
-        /// <returns></returns>
- 
+        /// <returns></returns> 
         public bool[] Execute(Instruction cmd, bool[] flags)
         {            
             if (cmd.checkCond(flags))

@@ -13,10 +13,6 @@ namespace GDBStub
     class Memory
     {
         protected byte[] theArray;
-
-        //program counter
-        //Int32 pc;
-
         //Memory Constructor that takes no arguments
         //auto designates ram size to 32768
         public Memory()

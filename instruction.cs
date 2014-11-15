@@ -207,7 +207,7 @@ namespace GDBStub
                     return false;
             }
             // should never ever ever ever need this
-            // but C# doth compain if it is not here
+            // but C# doth compain if it is not here 
             return false;
         }
     }    

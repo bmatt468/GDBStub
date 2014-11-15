@@ -7,11 +7,9 @@ using System.Net;
 using System.Net.Sockets;
 
 namespace GDBStub
-{
-    
+{    
     class Handler
     {
-
         public bool interput { get; set; }
         public bool running { get; set; }
         public void Start()
@@ -323,8 +321,6 @@ namespace GDBStub
                             this.Respond("-", ns);
                         }
                     }
-
-
                     break;
 
                 case 's':

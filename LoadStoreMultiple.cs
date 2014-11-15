@@ -92,7 +92,6 @@ namespace GDBStub
                     }
                 }
             }
-
             // Handles the writeback if needed
             if (this.W)
             {

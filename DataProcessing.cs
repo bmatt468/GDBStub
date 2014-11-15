@@ -232,8 +232,7 @@ namespace GDBStub
                 //set Z
                 Z = m2.ReadWord(0, true) == 0;
                 C = false;
-                F = false;
-                
+                F = false;                
             }
         }
     }

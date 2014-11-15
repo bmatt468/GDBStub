@@ -100,16 +100,6 @@ namespace GDBStub
             {
                 if (trace_is_open)
                 {
-                    string r15 = "";
-                    if (lastInstructionWasBranch)
-                    {
-                        r15 = useThisValueForBranchedr15;
-                    }
-                    else
-                    {
-                        r15 = comp.getReg(15).getRegString().ToUpper().Trim();
-                    }
-                    
                     // build NZCF to ease later code
                     string nzcf = Convert.ToInt32(comp.getFlag('N')).ToString() 
                         + Convert.ToInt32(comp.getFlag('Z')).ToString()
@@ -118,7 +108,7 @@ namespace GDBStub
 
                     // build trace string and objects
                     object[] objects = { (comp.getStepNumber()).ToString().PadLeft(6, '0') //0
-                                           , r15 //1
+                                           , useThisValueForBranchedr15 //1
                                            , "[sys]" //2
                                            , nzcf //3
                                            , "0=" + comp.getReg(0).getRegString().ToUpper().Trim() //4

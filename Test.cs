@@ -22,7 +22,6 @@ namespace GDBStub
         public string resultHash { get; set; }
         public string hash { get; set; }
 
-
         public TestSimulator()
         {
             e = new ELFReader();

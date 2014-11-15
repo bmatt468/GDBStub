@@ -10,7 +10,6 @@ using System.Runtime.InteropServices;
 
 namespace GDBStub
 {
-
     /*
      * A Computer or System class that represents your simulated computer;
      * contains registers, CPU, and RAM objects; 
@@ -26,8 +25,8 @@ namespace GDBStub
             public string statval { get; set; }
 
         }
+        
         public status compStatus { get; set; }
-
         
         //is running flag
         bool is_running = false;
@@ -39,13 +38,11 @@ namespace GDBStub
         string checkSum = "";
         uint step_number = 1;
         Dictionary<uint, uint> storedCommands = new Dictionary<uint,uint>();
-
         Register[] reg = new Register[16];
         Memory RAM;
         CPU cpu;
         Thread programThread;
         private Object thisLock = new Object();
-
         private static Computer instance;
 
         public static Computer Instance
@@ -66,24 +63,16 @@ namespace GDBStub
         public Computer()
         {
             this.RAM = new Memory(Option.Instance.memSize);
-            
-            //Logger.Instance.clearLog();
-
             //defines 15 registers, 0 - 15
             for (uint i = 0; i < 16; i++){
                 this.reg[i] = new Register();
                 this.reg[i].regID = i;
-            }
-        
-            //activate trace for the first time
-            //trace = new StreamWriter("trace.log", false);
-
+            }        
+           
             this.cpu = new CPU(RAM,reg);
         }
 
-
 //--------------- Getters ---------//
-
         public bool getIsRunning(){ return is_running;}
 //flags
         public bool getFlag(char flag)
@@ -128,8 +117,6 @@ namespace GDBStub
         public bool getThreadStatus() { return programThread.IsAlive; }
 
 //----------Dumpers Kind of like getters--------
-
-
         //dumps the requested Ram into a byte array
         public byte[] dumpRAM(uint addr, int length)
         {
@@ -156,8 +143,6 @@ namespace GDBStub
             return output;
         }
 
-
-
         /// dumps a single register of data
         /// in the form XX.. where XX is the hex
         /// data from the specified register
@@ -171,8 +156,6 @@ namespace GDBStub
             Logger.Instance.writeLog(string.Format("REG: Requested # {0}", n));  
             return reg[n].getRegister(); 
         }
-
-
 
         private bool isBreakPoint(Memory rawInstruction)
         {
@@ -192,15 +175,8 @@ namespace GDBStub
 
             return output;
         }
-        
-
-
 //-------------- End Getters//
-
-
-
 //------------------- Setters
-
         /// <summary>
         /// writes data to a specified register
         /// </summary>
@@ -217,7 +193,6 @@ namespace GDBStub
                 }
             }
             Logger.Instance.writeLog(String.Format("REG: Wrote {0} to REG", Logger.Instance.byteArrayToString(x)));
-
         }
 
         /// <summary>
@@ -376,9 +351,7 @@ namespace GDBStub
             }
             reg[13].WriteWord(0, 0x7000);
             return output;
-
         }
-
 
         //writes the ELF file to the RAM array
         public void writeElfToRam(ELFReader e, byte[] elfArray)
@@ -409,10 +382,6 @@ namespace GDBStub
         }//writeElfToRam
 
 //End ELF code
-
-
-
-
  //---------------Actions
  //Load, Reset, Stop, Step, and Run and Go.
         public void load(string file, int memSize = -1)
@@ -548,6 +517,7 @@ namespace GDBStub
             lock(thisLock){
                 do
                 {
+                    Logger.Instance.useThisValueForBranchedr15 = Convert.ToString(reg[15].ReadWord(0), 16).ToUpper().PadLeft(8,'0');
                     //fetch, decode, execute commands here
                     Memory rawInstruction = cpu.Fetch();
                     Logger.Instance.writeLog(string.Format("CMD: #{0} = 0x{1}", this.step_number, Convert.ToString(rawInstruction.ReadWord(0), 16)));

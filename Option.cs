@@ -90,7 +90,5 @@ namespace GDBStub
             }
             return valid;
         }
-
     }
-
 }

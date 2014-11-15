@@ -8,7 +8,6 @@ using System.Security.Cryptography;
 using System.IO;
 using System.Runtime.InteropServices;
 
-
 namespace GDBStub
 {
     //edit it!!!
