@@ -41,9 +41,7 @@ namespace GDBStub
             {                
                 case 0:
                     // Data Processing  (00X)
-                    if (!command.TestFlag(0,25) 
-                        && command.TestFlag(0,24)
-                        && command.TestFlag(0,21))
+                    if ((0x012FFF10 & command.ReadWord(0)) == 0x012FFF10)
                     {
                         i = new Branch();
                     }
@@ -71,6 +69,7 @@ namespace GDBStub
                     {
                         if (command.TestFlag(0, 27) && !command.TestFlag(0, 26) && command.TestFlag(0, 25))
                         {
+                            Logger.Instance.lastInstructionWasBranch = true;
                             i = new Branch();
                         }
                     }
@@ -80,7 +79,7 @@ namespace GDBStub
                     //Coprocessor
                     if (command.TestFlag(0, 26) && command.TestFlag(0, 25))
                     {
-                        Environment.Exit(0);
+                        //interupt
                     }
                     break;
                 default:

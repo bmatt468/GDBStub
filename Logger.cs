@@ -12,6 +12,8 @@ namespace GDBStub
         StreamWriter log, trace;
         bool trace_is_open = false;
         private Object thisLock = new Object();
+        public bool lastInstructionWasBranch { get; set; }
+        public string useThisValueForBranchedr15 { get; set; }
         //variables that hold references to the regs and RAM
 
         //CPU instantiation
@@ -23,6 +25,7 @@ namespace GDBStub
         private Logger() 
         {
             toggleTrace();
+            lastInstructionWasBranch = false;
         }
 
         
@@ -97,6 +100,16 @@ namespace GDBStub
             {
                 if (trace_is_open)
                 {
+                    string r15 = "";
+                    if (lastInstructionWasBranch)
+                    {
+                        r15 = useThisValueForBranchedr15;
+                    }
+                    else
+                    {
+                        r15 = comp.getReg(15).getRegString().ToUpper().Trim();
+                    }
+                    
                     // build NZCF to ease later code
                     string nzcf = Convert.ToInt32(comp.getFlag('N')).ToString() 
                         + Convert.ToInt32(comp.getFlag('Z')).ToString()
@@ -105,7 +118,7 @@ namespace GDBStub
 
                     // build trace string and objects
                     object[] objects = { (comp.getStepNumber()+1).ToString().PadLeft(6, '0') //0
-                                           , comp.getReg(15).getRegString().ToUpper().Trim() //1
+                                           , r15 //1
                                            , "[sys]" //2
                                            , nzcf //3
                                            , "0=" + comp.getReg(0).getRegString().ToUpper().Trim() //4
@@ -131,6 +144,7 @@ namespace GDBStub
                     // but I'm honestly just happy that it works
                     this.trace.WriteLine(String.Format(@"{0} {1} {2} {3} {4} {5} {6} {7}{8}{9}{10} {11} {12} {13} {14} {15}{8}{21}{16}{17}{18}{19}{20}", objects));                    
                     this.trace.Flush();
+                    lastInstructionWasBranch = false;
                 }
             }
         }       

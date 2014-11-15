@@ -62,6 +62,7 @@ namespace GDBStub
 
             addressToWhichWeBranch -= 4;
             ra[15].WriteWord(0, addressToWhichWeBranch);
+            Logger.Instance.useThisValueForBranchedr15 = Convert.ToString(addressToWhichWeBranch - 4, 16).ToUpper().PadLeft(8, '0');
             Logger.Instance.writeLog(string.Format("Assembly: BX 0x{0} : 0x{1}", Convert.ToString(addressToWhichWeBranch + 4,16), Convert.ToString(this.initialBytes, 16)));
         }
     }

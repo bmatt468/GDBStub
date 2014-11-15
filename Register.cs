@@ -34,10 +34,14 @@ namespace GDBStub
             return theArray;
         }
 
+        internal string getBranchRegString()
+        {
+            return Convert.ToString(ReadWord(0) - 4, 16).PadLeft(8, '0');
+        }
 
         internal string getRegString()
         {
-            return Convert.ToString(ReadWord(0),16).PadLeft(8, '0');;
+            return Convert.ToString(ReadWord(0),16).PadLeft(8, '0');
         }
     }
 }

@@ -508,21 +508,19 @@ namespace GDBStub
         }
 
         // begin variables for IO
-        public List<char> charList { get; set; }
+        public Queue<char> charList { get; set; }
 
         private void io()
         {
-            charList = new List<char>();
+            charList = new Queue<char>();
             ConsoleKeyInfo cki;
             Console.WriteLine("Opening Terminal For I/O:");
             while (true)
             {
                 if (Console.KeyAvailable)
                 {
-                    cki = Console.ReadKey();
-                    Console.WriteLine("\nYou pressed the '{0}' key.", cki.Key);
-                    charList.Add(cki.KeyChar);
-                    Console.WriteLine("New Character Detected: List now contains " + charList.Count + " items");
+                    cki = Console.ReadKey(true);
+                    charList.Enqueue(cki.KeyChar);
                 }               
             }
         }

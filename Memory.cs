@@ -143,6 +143,12 @@ namespace GDBStub
 
         public byte ReadByte(UInt32 addr)
         {
+            if (addr == 0x00100001)
+            {
+                //read char                
+                return (Computer.Instance.charList.Count != 0) ? (byte)Computer.Instance.charList.Dequeue() : (byte)0;
+            }
+            
             byte output = theArray[addr];
             return output;
         }
@@ -168,7 +174,16 @@ namespace GDBStub
 
         public void WriteByte(UInt32 addr, byte inpu)
         {
-            theArray[addr] = inpu;
+            if (addr == 0x00100000)
+            {
+                //put char
+                Console.Write((char)inpu);
+            }
+            else
+            {
+                theArray[addr] = inpu;
+            }
+            
         }
 
         public void CLEAR()
