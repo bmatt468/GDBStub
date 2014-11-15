@@ -521,6 +521,10 @@ namespace GDBStub
                 {
                     cki = Console.ReadKey(true);
                     charList.Enqueue(cki.KeyChar);
+                    if (cki.Key == ConsoleKey.Enter)
+                    {
+                        Console.WriteLine("");
+                    }
                 }               
             }
         }

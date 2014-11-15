@@ -117,7 +117,7 @@ namespace GDBStub
                         + Convert.ToInt32(comp.getFlag('F')).ToString(); 
 
                     // build trace string and objects
-                    object[] objects = { (comp.getStepNumber()+1).ToString().PadLeft(6, '0') //0
+                    object[] objects = { (comp.getStepNumber()).ToString().PadLeft(6, '0') //0
                                            , r15 //1
                                            , "[sys]" //2
                                            , nzcf //3
