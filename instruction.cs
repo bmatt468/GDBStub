@@ -80,7 +80,7 @@ namespace GDBStub
                     //Coprocessor
                     if (command.TestFlag(0, 26) && command.TestFlag(0, 25))
                     {
-                        //Interupts: To be tackled much later
+                        Environment.Exit(0);
                     }
                     break;
                 default:

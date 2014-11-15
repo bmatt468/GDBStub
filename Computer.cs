@@ -296,7 +296,6 @@ namespace GDBStub
             {
                 RAM.WriteWord(addr, storedCommands[addr]);
                 Logger.Instance.writeLog(string.Format("BREAK: Removed At {0}", Convert.ToString(addr,16)));
-
             }
             catch 
             {
@@ -496,6 +495,7 @@ namespace GDBStub
                 // Start the thread
                 programThread = new Thread(new ThreadStart(this.go));
                 programThread.Start();
+                
                 //wait for thread to get going.
                 while (!programThread.IsAlive) ;
 
@@ -504,6 +504,26 @@ namespace GDBStub
             else
             {
                 Logger.Instance.writeLog("Already Running");
+            }
+        }
+
+        // begin variables for IO
+        public List<char> charList { get; set; }
+
+        private void io()
+        {
+            charList = new List<char>();
+            ConsoleKeyInfo cki;
+            Console.WriteLine("Opening Terminal For I/O:");
+            while (true)
+            {
+                if (Console.KeyAvailable)
+                {
+                    cki = Console.ReadKey();
+                    Console.WriteLine("\nYou pressed the '{0}' key.", cki.Key);
+                    charList.Add(cki.KeyChar);
+                    Console.WriteLine("New Character Detected: List now contains " + charList.Count + " items");
+                }               
             }
         }
 
@@ -519,6 +539,9 @@ namespace GDBStub
          */
         private void go()
         {
+            Thread ioThread = new Thread(new ThreadStart(this.io));
+            ioThread.Start();
+            while (!ioThread.IsAlive) ;
          //mutex lock
             lock(thisLock){
                 do
@@ -602,7 +625,6 @@ namespace GDBStub
                 stoppedStatus.statval = "05";
                 compStatus = stoppedStatus;
                 Logger.Instance.writeLog("COMP: Stopped");
-
             }
 
             //mutex unlock
